@@ -10,7 +10,7 @@ const Header = () => {
   const navigate = useNavigate();
   const goHome = () => {
     navigate("/");
-  };
+  };                                                                      //video 10 bayad dide beshse
   return (
     <header className="header">
       <nav>

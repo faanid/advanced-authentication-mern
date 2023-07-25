@@ -1,11 +1,29 @@
 import React from "react";
-import Header from "../../components/header/Header";
+import "./Home.scss";
+import loginImg from "../../assets/login.svg";
 
 const Home = () => {
   return (
     <div>
-      <Header />
-      <h1>Home!</h1>
+      <section className="container hero">
+        <div className="hero-text">
+          <h2>Ultimate MERN Stack Authentication System</h2>
+          <p>
+            learn and master authentication and authorization using mern stack.
+          </p>
+          <p>
+            implement user regisration login password reser social login user
+            permissions email notiication
+          </p>
+          <div className="hero-buttons --flex-start">
+            <button className="--btn --btn-danger">Register</button>
+            <button className="--btn --btn-primary">Login</button>
+          </div>
+        </div>
+        <div className="hero-image">
+          <img src={loginImg} alt="Auth" />
+        </div>
+      </section>
     </div>
   );
 };
