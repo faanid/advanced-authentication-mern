@@ -1,13 +1,19 @@
 import React, { useState } from "react";
 import Link from "react-router-dom";
-import { BiLogIn } from "react-icons/bi";
+import { TiUserAddPutline } from "react-icons/bi";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 
-const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+const initialState = {
+  name: "",
+  email: "",
+  password: "",
+  password2: "",
+};
+const Register = () => {
+  const [formData, setFormData] = useState(initialState);
+  const [name, email, password, password2] = formData;
 
   const handleInputChange = () => {};
 
@@ -18,15 +24,19 @@ const Login = () => {
       <Card>
         <div className={styles.form}>
           <div className="--flex-center">
-            <BiLogIn size={35} color="#999" />
+            <TiUserAddPutline size={35} color="#999" />
           </div>
-          <h2>Login</h2>
-          <div className="--flex-center">
-            <button className="--btn --btn-google">Login With Google </button>
-          </div>
-          <br />
-          <p className="--text-center --fw-bold">or</p>
+          <h2>Register</h2>
+
           <form onSubmit={loginUser}>
+            <input
+              type="text"
+              placeholder="Name"
+              required
+              name="name"
+              value={name}
+              onChange={handleInputChange}
+            />
             <input
               type="email"
               placeholder="Email"
@@ -35,29 +45,28 @@ const Login = () => {
               value={email}
               onChange={handleInputChange}
             />
+
             <PasswordInput
               placeholder="Password"
               name="password"
               value={password}
               onChange={handleInputChange}
             />
-            {/* <input
-              type="password"
-              placeholder="Password"
-              required
-              name="password"
-              value={password}
+            <PasswordInput
+              placeholder="Confirm Password"
+              name="password2"
+              value={password2}
               onChange={handleInputChange}
-            /> */}
+            />
             <button type="submit" className="--btn --btn-primary --btn-block">
-              Login
+              Register
             </button>
           </form>
-          <Link to="/forget">Forget Password</Link>
+
           <span className={styles.register}>
             <Link to="/">Home</Link>
-            <p> &nbsp; Don't have an account? &nbsp;</p>
-            <Link to="/register">Register</Link>
+            <p> &nbsp; Already have an account? &nbsp;</p>
+            <Link to="/login">Login</Link>
           </span>
         </div>
       </Card>
@@ -65,4 +74,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
