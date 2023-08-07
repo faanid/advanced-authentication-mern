@@ -4,6 +4,8 @@ import Layout from "./components/layout/Layout";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Forgot from "./pages/auth/Forgot";
+import Reset from "./pages/auth/Reset";
+import LoginWithCode from "./pages/auth/LoginWithCode";
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot" element={<Forgot />} />
+          <Route path="/resetPassword/:resetToken" element={<Reset />} />
+          <Route path="/loginWithCode/:email" element={<LoginWithCode />} />
         </Routes>
       </BrowserRouter>
     </>
