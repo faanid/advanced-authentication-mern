@@ -1,4 +1,4 @@
-# advanced-authentication-mern
+# advanced authentication mern
 
 1- user Registration
 2- User Login - Email & Password
