@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Card from "../../components/card/Card";
 import profileImg from "../../assets/avatarr.png";
 import "./Profile.scss";
+import PageMenu from "../../components/pageMenu/PageMenu";
 
 const initialState = {
   name: "fateme",
@@ -21,6 +22,7 @@ function Profile() {
   return (
     <section>
       <div className="container">
+        <PageMenu />
         <h2>Profile</h2>
         <div className="--flex-start profile">
           <Card cardClass={"card"}>
@@ -70,7 +72,7 @@ function Profile() {
                   />
                 </p>
                 <p>
-                  <label>Phone:</label>
+                  <label>Bio:</label>
                   <textarea
                     name="bio"
                     value={profile.phone}
