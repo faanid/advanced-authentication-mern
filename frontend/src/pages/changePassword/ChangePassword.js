@@ -22,7 +22,7 @@ const ChangePassword = () => {
         <div className="container">
           <PageMenu />
           <h2>Change Password</h2>
-          <div className="--flex-start profile">
+          <div className="--flex-start change-password">
             <Card cardClass={"card"}>
               <>
                 <div className="profile-photo">
