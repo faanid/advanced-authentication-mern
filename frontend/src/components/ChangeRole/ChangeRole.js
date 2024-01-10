@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { FaCheck } from "react-icons";
+import { FaCheck } from "react-icons/fa";
 
 function ChangeRole() {
   const [userRole, setUserRole] = useState("");
