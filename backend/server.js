@@ -8,6 +8,18 @@ const cookieParser = require("cookie-parser");
 //Initialized app
 const app = express();
 
+//Middlewares
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
+app.use(bodyParser.json());
+app.use(
+  cors({
+    origin: ["http://localhost:3000", "https://auth-app.vercel.app"], // reflecting the request header
+    credentials: true,
+  })
+);
+
 //Create a route
 app.get("/", (req, res) => {
   res.send("Home Page");
@@ -27,4 +39,3 @@ mongoose
   .catch((err) => {
     console.log(err);
   });
-//test
