@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const userRoute = require("./routes/userRoute");
 
 //Initialized app
 const app = express();
@@ -19,6 +20,9 @@ app.use(
     credentials: true,
   })
 );
+
+//Routes
+app.use("/api/users", userRoute);
 
 //Create a route
 app.get("/", (req, res) => {
