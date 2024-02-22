@@ -1,6 +1,8 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
+const { generateToken } = require("../utils");
+const { generateToken } = require("../utils/index");
 
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -30,6 +32,37 @@ const registerUser = asyncHandler(async (req, res) => {
     email,
     password,
   });
+
+  //Generate Token
+  const token = generateToken(user._id);
+
+  //Send HTTP-only cookie
+  res.cookie("token", token, {
+    path: "/",
+    httpOnly: true,
+    expires: new Date(Date.now() + 1000 * 86400), //1 day
+    sameSite: "none",
+    secure: false, //when deploy change it to "true"
+  });
+
+  if (user) {
+    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
+
+    res.status(201).json({
+      _id,
+      name,
+      email,
+      phone,
+      bio,
+      photo,
+      role,
+      isVerified,
+      token,
+    });
+  } else {
+    res.status(400);
+    throw new Error("Invalid user data");
+  }
 });
 
 module.exports = {
