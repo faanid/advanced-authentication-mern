@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const bcrypt = require("bcryptjs");
+var parser = require("ua-parser-js");
 
 const { generateToken } = require("../utils/index");
 
@@ -26,11 +27,17 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Email already in use. Please login instead.");
   }
 
+  // Get UserAgent
+  const ua = parser(req.header["user-agent"]);
+  // console.log(ua);
+  const userAgent = [ua.ua];
+
   // Create New User
   const user = await User.create({
     name,
     email,
     password,
+    userAgent,
   });
 
   //Generate Token
