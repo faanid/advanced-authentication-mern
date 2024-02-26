@@ -131,6 +131,10 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+const getUser = asyncHandler(async (req, res) => {
+  res.send("Get User");
+});
+
 /// Logout User
 const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
@@ -147,4 +151,5 @@ module.exports = {
   registerUser,
   loginUser,
   logoutUser,
+  getUser,
 };
