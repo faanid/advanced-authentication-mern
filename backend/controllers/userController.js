@@ -132,7 +132,25 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const getUser = asyncHandler(async (req, res) => {
-  res.send("Get User");
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
+
+    res.status(201).json({
+      _id,
+      name,
+      email,
+      phone,
+      bio,
+      photo,
+      role,
+      isVerified,
+    });
+  } else {
+    res.status(400);
+    throw new Error("No user found");
+  }
 });
 
 /// Logout User
