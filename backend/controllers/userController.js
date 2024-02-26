@@ -165,9 +165,43 @@ const logoutUser = asyncHandler(async (req, res) => {
   return res.status(200).json({ message: "Logout successfully" });
 });
 
+// Update User
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (user) {
+    const { name, email, phone, bio, photo, role, isVerified } = user;
+
+    user.email = email;
+    user.name = req.body.name || name;
+    user.phone = req.body.phone || phone;
+    user.bio = req.body.phone || bio;
+    user.photo = req.body.photo || photo;
+
+    //save
+    const updatedUser = await user.save();
+
+    //send response back to frontend
+    res.status(201).json({
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      phone: updatedUser.phone,
+      bio: updatedUser.bio,
+      photo: updatedUser.photo,
+      role: updatedUser.role,
+      isVerified: updatedUser.isVerified,
+    });
+  } else {
+    res.status(404);
+    throw new Error("No user found");
+  }
+});
+
 module.exports = {
   registerUser,
   loginUser,
   logoutUser,
   getUser,
+  updateUser,
 };
