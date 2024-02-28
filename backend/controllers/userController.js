@@ -211,6 +211,16 @@ const deleteUser = asyncHandler(async (req, res) => {
   res.status(200).json({ message: "User deleted successfully" });
 });
 
+// Get Users
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find().sort("-createdAt").select("-password");
+  if (!users) {
+    res.status(400);
+    throw new Error("Something went wrong");
+  }
+  res.status(200).json(users);
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -218,4 +228,5 @@ module.exports = {
   getUser,
   updateUser,
   deleteUser,
+  getUsers,
 };
