@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 var parser = require("ua-parser-js");
 
@@ -221,6 +222,22 @@ const getUsers = asyncHandler(async (req, res) => {
   res.status(200).json(users);
 });
 
+// Get Login Status
+const loginStatus = asyncHandler(async (req, res) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.json(false);
+  }
+
+  // Verify Token
+  const verified = jwt.verify(token, process.env.JWT_SECRET);
+
+  if (verified) {
+    return res.json(true);
+  }
+  return res.json(false);
+});
+
 module.exports = {
   registerUser,
   loginUser,
@@ -229,4 +246,5 @@ module.exports = {
   updateUser,
   deleteUser,
   getUsers,
+  loginStatus,
 };
