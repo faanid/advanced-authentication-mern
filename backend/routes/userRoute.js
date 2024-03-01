@@ -14,6 +14,7 @@ const {
   deleteUser,
   getUsers,
   loginStatus,
+  upgradeUser,
 } = require("../controllers/userController");
 
 router.post("/register", registerUser);
@@ -25,5 +26,6 @@ router.patch("/updateUser", protect, updateUser);
 router.delete("/:id", protect, adminOnly, deleteUser);
 router.get("/getUsers", protect, authorOnly, getUsers);
 router.get("/loginStatus", loginStatus);
+router.post("/upgradeUser", protect, adminOnly, upgradeUser);
 
 module.exports = router;
