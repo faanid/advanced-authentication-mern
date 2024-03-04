@@ -3,8 +3,10 @@ const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 var parser = require("ua-parser-js");
-
+const sendEmail = require("../utils/sendEmail");
 const { generateToken } = require("../utils/index");
+const Token = require("../models/tokenModel");
+const crypto = require("crypto");
 
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
@@ -75,7 +77,6 @@ const registerUser = asyncHandler(async (req, res) => {
 });
 
 //Login User
-
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
@@ -154,6 +155,32 @@ const getUser = asyncHandler(async (req, res) => {
   }
 });
 
+// Send Verification Email
+const sendVerificationEmail = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+  if (user.isVerified) {
+    res.status(400);
+    throw new Error("User already verified");
+  }
+
+  // Delete Token if it's exists in DB
+  let token = await Token.findOne({ userId: user._id });
+  if (token) {
+    await token.deleteOne();
+  }
+
+  // Create verification Token and Save in DB
+  const verificationToken = crypto.randomBytes(32).toString("hex") + user._id;
+
+  console.log(verificationToken);
+  res.send("Token");
+});
+
 /// Logout User
 const logoutUser = asyncHandler(async (req, res) => {
   res.cookie("token", "", {
@@ -201,7 +228,7 @@ const updateUser = asyncHandler(async (req, res) => {
 
 // Delete User
 const deleteUser = asyncHandler(async (req, res) => {
-  const user = User.findByID(req.params.id);
+  const user = User.findById(req.params.id);
 
   if (!user) {
     res.status(404);
@@ -295,6 +322,8 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
   }
 });
 
+//
+
 module.exports = {
   registerUser,
   loginUser,
@@ -306,4 +335,5 @@ module.exports = {
   loginStatus,
   upgradeUser,
   sendAutomatedEmail,
+  sendVerificationEmail,
 };
