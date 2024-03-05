@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 var parser = require("ua-parser-js");
 const sendEmail = require("../utils/sendEmail");
-const { generateToken } = require("../utils/index");
+const { generateToken, hashToken } = require("../utils/index");
 const Token = require("../models/tokenModel");
 const crypto = require("crypto");
 
@@ -177,8 +177,44 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
   // Create verification Token and Save in DB
   const verificationToken = crypto.randomBytes(32).toString("hex") + user._id;
 
-  console.log(verificationToken);
-  res.send("Token");
+  // Hash token and save
+  const hashedToken = hashToken(verificationToken);
+  await new Token({
+    userId: user._id,
+    verifyToken: hashedToken,
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 30 * (60 * 1000), // 60 mins
+  }).save();
+
+  // Construct Verification URL
+  const verificationUrl = `${
+    (process.env, FRONTEND_URL)
+  }/verify/${verificationToken}`;
+
+  // Send Email
+  const subject = "Verify Your Account - AUTH:F";
+  const send_to = user.email;
+  const sent_from = process.env.EMAIL_USER;
+  const reply_to = "noreply@fti.com";
+  const template = "verifyEmail";
+  const name = user.name;
+  const link = verificationUrl;
+
+  try {
+    await sendEmail(
+      subject,
+      send_to,
+      sent_from,
+      reply_to,
+      template,
+      name,
+      link
+    );
+    res.status(200).json({ message: "Email Sent" });
+  } catch (error) {
+    res.status(500);
+    throw new Error("Email not send, please try again.");
+  }
 });
 
 /// Logout User
