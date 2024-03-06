@@ -181,7 +181,7 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
   const hashedToken = hashToken(verificationToken);
   await new Token({
     userId: user._id,
-    verifyToken: hashedToken,
+    vToken: hashedToken, //verify token
     createdAt: Date.now(),
     expiresAt: Date.now() + 30 * (60 * 1000), // 60 mins
   }).save();
@@ -210,11 +210,41 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
       name,
       link
     );
-    res.status(200).json({ message: "Email Sent" });
+    res.status(200).json({ message: "Verification Email Sent" });
   } catch (error) {
     res.status(500);
     throw new Error("Email not send, please try again.");
   }
+});
+
+// Verify User
+const verifyToken = asyncHandler(async (req, res) => {
+  const { verificationToken } = req.params;
+
+  const hashedToken = hashToken(verificationToken);
+
+  const userToken = await Token.findOne({
+    vToken: hashedToken,
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    res.status(404);
+    throw new Error("Invalid or Expired Token");
+  }
+
+  // Find User
+  const user = await User.findOne({ _id: userToken.userId });
+
+  if (user.isVerified) {
+    res.status(400);
+    throw new Error("User is already verified!");
+  }
+
+  // Now verify user
+  user.isVerified = true;
+  await user.save();
+  res.status(200).json({ message: "Account Verification Successful" });
 });
 
 /// Logout User
@@ -372,4 +402,5 @@ module.exports = {
   upgradeUser,
   sendAutomatedEmail,
   sendVerificationEmail,
+  verifyToken,
 };
