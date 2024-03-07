@@ -11,7 +11,8 @@ const tokenSchema = mongoose.Schema({
     type: String,
     default: "",
   },
-  resetToken: {
+  rToken: {
+    // reset token
     type: String,
     default: "",
   },

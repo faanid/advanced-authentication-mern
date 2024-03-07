@@ -390,7 +390,60 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
 
 // Forgot Password
 const forgotPassword = asyncHandler(async (req, res) => {
-  res.send("forgot pass");
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("No user with this email!");
+  }
+  // Delete Token if it's exists in DB
+  let token = await Token.findOne({ userId: user._id });
+  if (token) {
+    await token.deleteOne();
+  }
+
+  // Create verification Token and Save in DB
+  const resetToken = crypto.randomBytes(32).toString("hex") + user._id;
+  console.log(resetToken);
+
+  // Hash token and save
+  const hashedToken = hashToken(resetToken);
+  await new Token({
+    userId: user._id,
+    rToken: hashedToken, //reset token
+    createdAt: Date.now(),
+    expiresAt: Date.now() + 30 * (60 * 1000), // 60 mins
+  }).save();
+
+  // Construct Reset URL
+  const resetUrl = `${(process.env, FRONTEND_URL)}/resetPassword/${resetToken}`;
+
+  // Send Email
+  const subject = "Password Reset Request - AUTH:F";
+  const send_to = user.email;
+  const sent_from = process.env.EMAIL_USER;
+  const reply_to = "noreply@fti.com";
+  const template = "forgotPassword";
+  const name = user.name;
+  const link = resetUrl;
+
+  try {
+    await sendEmail(
+      subject,
+      send_to,
+      sent_from,
+      reply_to,
+      template,
+      name,
+      link
+    );
+    res.status(200).json({ message: "Password Reset Email Sent" });
+  } catch (error) {
+    res.status(500);
+    throw new Error("Email not send, please try again.");
+  }
 });
 
 module.exports = {
