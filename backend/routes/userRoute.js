@@ -19,6 +19,7 @@ const {
   sendVerificationEmail,
   verifyToken,
   forgotPassword,
+  resetPassword,
 } = require("../controllers/userController");
 
 router.post("/register", registerUser);
@@ -36,5 +37,6 @@ router.post("sendAutomatedEmail", protect, sendAutomatedEmail);
 router.post("/sendVerificationEmail", protect, sendVerificationEmail);
 router.patch("/verifyToken:verificationToken", verifyToken);
 router.post("/forgotPassword", forgotPassword);
+router.patch("/resetPassword/:resetToken", resetPassword);
 
 module.exports = router;
