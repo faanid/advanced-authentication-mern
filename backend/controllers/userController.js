@@ -104,6 +104,39 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   // Trigger 2FA for  unknown UserAgent
+  const ua = parser(req.header["user-agent"]);
+  const thisUserAgent = ua.ua;
+  console.log(thisUserAgent);
+  const allowedAgent = user.userAgent.includes(thisUserAgent);
+
+  if (!allowedAgent) {
+    // Generate 6 digit code
+    const loginCode = math.floor(100000 + Math.random() * 900000);
+    console.log(loginCode);
+
+    // Encrypt login code before saving to DB
+    const encryptedLoginCode = cryptr.encrypt(loginCode.toString());
+
+    // Save the generated Code in DB
+
+    // Delete Token if it's exists in DB
+    let userToken = await Token.findOne({ userId: user._id });
+    if (userToken) {
+      await userToken.deleteOne();
+    }
+
+    // Save Token to DB
+    const hashedToken = hashToken(resetToken);
+    await new Token({
+      userId: user._id,
+      lToken: encryptedLoginCode, //reset token
+      createdAt: Date.now(),
+      expiresAt: Date.now() + 30 * (60 * 1000), // 60 mins
+    }).save();
+
+    res.status(400);
+    throw new Error("Check your email for login code");
+  }
 
   //Generate Token
   const token = generateToken(user._id);
