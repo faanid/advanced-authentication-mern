@@ -20,6 +20,7 @@ const {
   verifyToken,
   forgotPassword,
   resetPassword,
+  changePassword,
 } = require("../controllers/userController");
 
 router.post("/register", registerUser);
@@ -38,5 +39,6 @@ router.post("/sendVerificationEmail", protect, sendVerificationEmail);
 router.patch("/verifyToken:verificationToken", verifyToken);
 router.post("/forgotPassword", forgotPassword);
 router.patch("/resetPassword/:resetToken", resetPassword);
+router.patch("/changePassword", protect, changePassword);
 
 module.exports = router;
