@@ -8,6 +8,9 @@ const { generateToken, hashToken } = require("../utils/index");
 const Token = require("../models/tokenModel");
 const crypto = require("crypto");
 
+const Cryptr = require("cryptr");
+const cryptr = new Cryptr(process.env.CRYPTR_KEY);
+
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
