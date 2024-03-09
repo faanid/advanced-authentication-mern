@@ -169,6 +169,56 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
+// Send Login Code
+const sendLoginCode = asyncHandler(async (req, res) => {
+  const { email } = req.params;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found!");
+  }
+
+  // Find Login Code in DB
+  let userToken = await Token.findOne({
+    userId: user._id,
+    expiresAt: { $gt: Date.now() },
+  });
+
+  if (!userToken) {
+    res.status(404);
+    throw new Error("Invalid or Expired token, please login again");
+  }
+
+  const loginCode = userToken.lToken;
+  const decryptedLoginCode = cryptr.decrypt(loginCode);
+
+  // Send Login Code
+  const subject = "Login Access Code - AUTH:F";
+  const send_to = email;
+  const sent_from = process.env.EMAIL_USER;
+  const reply_to = "noreply@fti.com";
+  const template = "loginCode";
+  const name = user.name;
+  const link = decryptedLoginCode;
+
+  try {
+    await sendEmail(
+      subject,
+      send_to,
+      sent_from,
+      reply_to,
+      template,
+      name,
+      link
+    );
+    res.status(200).json({ message: `Access code sent to  ${email} !` });
+  } catch (error) {
+    res.status(500);
+    throw new Error("Email not send, please try again.");
+  }
+});
+
 const getUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -541,6 +591,8 @@ const changePassword = asyncHandler(async (req, res) => {
   }
 });
 
+//
+
 module.exports = {
   registerUser,
   loginUser,
@@ -557,4 +609,5 @@ module.exports = {
   forgotPassword,
   resetPassword,
   changePassword,
+  sendLoginCode,
 };
