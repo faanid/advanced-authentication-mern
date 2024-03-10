@@ -135,7 +135,7 @@ const loginUser = asyncHandler(async (req, res) => {
     }).save();
 
     res.status(400);
-    throw new Error("Check your email for login code");
+    throw new Error("New browser or device detected");
   }
 
   //Generate Token
@@ -238,6 +238,69 @@ const getUser = asyncHandler(async (req, res) => {
   } else {
     res.status(400);
     throw new Error("No user found");
+  }
+});
+
+// Login with Code
+const loginWithCode = asyncHandler(async (req, res) => {
+  const { email } = req.params;
+  const { loginCode } = req.body;
+
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found!");
+  }
+
+  // Find user login token
+  const userToken = await Token.findOne({
+    userToke: user.id,
+    expiresAt: { gt: Data.now() },
+  });
+
+  if (!userToken) {
+    res.status(404);
+    throw new Error("Invalid or Expired Token, Please log in again");
+  }
+
+  const decryptedLoginCode = cryptr.decrypt(userToken.lToken);
+
+  if (loginCode !== decryptedLoginCode) {
+    res.status(400);
+    throw new Error("Incorrect login code, please tyr again");
+  } else {
+    // Register userAgent
+    const ua = parser(req.header["user-agent"]);
+    const thisUserAgent = ua.ua;
+    user.userAgent.push(thisUserAgent);
+    await user.save();
+
+    //Generate Token
+    const token = generateToken(user._id);
+
+    //Send HTTP-only cookie
+    res.cookie("token", token, {
+      path: "/",
+      httpOnly: true,
+      expires: new Date(Date.now() + 1000 * 86400), //1 day
+      sameSite: "none",
+      secure: false, //when deploy change it to "true"
+    });
+
+    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
+
+    res.status(200).json({
+      _id,
+      name,
+      email,
+      phone,
+      bio,
+      photo,
+      role,
+      isVerified,
+      token,
+    });
   }
 });
 
@@ -610,4 +673,5 @@ module.exports = {
   resetPassword,
   changePassword,
   sendLoginCode,
+  loginWithCode,
 };
