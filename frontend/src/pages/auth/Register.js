@@ -6,6 +6,8 @@ import { BsCheck2All } from "react-icons/bs";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
+import { Toast } from "react-toastify/dist/components";
+import { validateEmail } from "../../redux/features/auth/authService";
 
 const initialState = {
   name: "",
@@ -66,7 +68,25 @@ const Register = () => {
     }
   }, [password]);
 
-  const loginUser = () => {};
+  const registerUser = (e) => {
+    e.preventDefault();
+
+    if (!name || !email || !password) {
+      Toast.error("All fields are required");
+    }
+    if (password.length < 6) {
+      return Toast.error("Password must be up to 6 characters");
+    }
+    if (!validateEmail(email)) {
+      return Toast.error("Please enter a valid email");
+    }
+    if (password !== password2) {
+      return Toast.error("Passwords do not match");
+    }
+
+    const userData = { name, email, password };
+    console.log(userData);
+  };
 
   return (
     <div className={`container ${styles.auth}`}>
@@ -77,7 +97,7 @@ const Register = () => {
           </div>
           <h2>Register</h2>
 
-          <form onSubmit={loginUser}>
+          <form onSubmit={registerUser}>
             <input
               type="text"
               placeholder="Name"
@@ -106,6 +126,11 @@ const Register = () => {
               name="password2"
               value={password2}
               onChange={handleInputChange}
+              onPaste={(e) => {
+                e.preventDefault();
+                Toast.error("Cannot pase into input field");
+                return false;
+              }}
             />
             {/* Password Strength */}
             <Card cardClass={styles.group}>
