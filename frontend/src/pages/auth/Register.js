@@ -6,7 +6,7 @@ import { BsCheck2All } from "react-icons/bs";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
-import { Toast } from "react-toastify/dist/components";
+import { toast } from "react-toastify";
 import { validateEmail } from "../../redux/features/auth/authService";
 import { useDispatch, useSelector } from "react-redux";
 import { RESET, register } from "../../redux/features/auth/authSlice";
@@ -82,16 +82,16 @@ const Register = () => {
     e.preventDefault();
 
     if (!name || !email || !password) {
-      Toast.error("All fields are required");
+      toast.error("All fields are required");
     }
     if (password.length < 6) {
-      return Toast.error("Password must be up to 6 characters");
+      return toast.error("Password must be up to 6 characters");
     }
     if (!validateEmail(email)) {
-      return Toast.error("Please enter a valid email");
+      return toast.error("Please enter a valid email");
     }
     if (password !== password2) {
-      return Toast.error("Passwords do not match");
+      return toast.error("Passwords do not match");
     }
 
     const userData = { name, email, password };
@@ -148,7 +148,7 @@ const Register = () => {
               onChange={handleInputChange}
               onPaste={(e) => {
                 e.preventDefault();
-                Toast.error("Cannot pase into input field");
+                toast.error("Cannot pase into input field");
                 return false;
               }}
             />
