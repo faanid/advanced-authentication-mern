@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { TiUserAddOutline } from "react-icons/ti";
 import { FaTimes } from "react-icons/fa";
 import { BsCheck2All } from "react-icons/bs";
@@ -8,6 +8,8 @@ import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { Toast } from "react-toastify/dist/components";
 import { validateEmail } from "../../redux/features/auth/authService";
+import { useDispatch, useSelector } from "react-redux";
+import { RESET, register } from "../../redux/features/auth/authSlice";
 
 const initialState = {
   name: "",
@@ -19,6 +21,13 @@ const initialState = {
 const Register = () => {
   const [formData, setFormData] = useState(initialState);
   const { name, email, password, password2 } = formData;
+
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { isLoading, isLoggedIn, isSuccess, message } = useSelector(
+    (state) => state.auth
+  );
 
   const [uCase, setUCase] = useState(false);
   const [num, setNum] = useState(false);
@@ -68,7 +77,7 @@ const Register = () => {
     }
   }, [password]);
 
-  const registerUser = (e) => {
+  const registerUser = async (e) => {
     e.preventDefault();
 
     if (!name || !email || !password) {
@@ -85,8 +94,17 @@ const Register = () => {
     }
 
     const userData = { name, email, password };
-    console.log(userData);
+    // console.log(userData);
+    await dispatch(register(userData));
   };
+  useEffect(() => {
+    //some conditions that i wanna to check
+    if (isSuccess && isLoggedIn) {
+      navigate("/profile");
+    }
+
+    dispatch(RESET());
+  }, [isLoggedIn, isSuccess, dispatch, navigate]);
 
   return (
     <div className={`container ${styles.auth}`}>
