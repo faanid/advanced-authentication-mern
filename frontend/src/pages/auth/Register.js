@@ -98,6 +98,7 @@ const Register = () => {
     // console.log(userData);
     await dispatch(register(userData));
   };
+
   useEffect(() => {
     //some conditions that i wanna to check
     if (isSuccess && isLoggedIn) {
