@@ -65,6 +65,26 @@ export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   }
 });
 
+// Get Login Status
+export const loginStatus = createAsyncThunk(
+  "auth/loginStatus",
+  async (_, thunkAPI) => {
+    // _  means : we not sending any data to the backend
+    try {
+      return await authService.loginStatus();
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -137,6 +157,20 @@ const authSlice = createSlice({
         state.message = action.payload;
         state.isError = true;
         toast.error(action.payload);
+      })
+      // Get Login Status
+      .addCase(loginStatus.pending, (state, action) => {
+        state.isLoading = true;
+      })
+      .addCase(loginStatus.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isLoggedIn = action.payload; //you can set it to 'True' but we want getting from 'backend'
+        state.isSuccess = true;
+      })
+      .addCase(loginStatus.rejected, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload;
+        state.isError = true;
       });
   },
 });
