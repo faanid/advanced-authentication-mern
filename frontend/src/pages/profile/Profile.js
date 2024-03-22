@@ -3,6 +3,7 @@ import Card from "../../components/card/Card";
 import profileImg from "../../assets/avatarr.png";
 import "./Profile.scss";
 import PageMenu from "../../components/pageMenu/PageMenu";
+import useRedirectLoggedOutUSer from "../../customHook/useRedirectLoggedOutUser";
 
 const initialState = {
   name: "fateme",
@@ -15,6 +16,8 @@ const initialState = {
 };
 
 function Profile() {
+  useRedirectLoggedOutUSer("/login");
+
   const [profile, setProfile] = useState(initialState);
 
   const handleImageChange = () => {};
