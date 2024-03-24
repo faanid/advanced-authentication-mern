@@ -7,6 +7,7 @@ import useRedirectLoggedOutUSer from "../../customHook/useRedirectLoggedOutUser"
 import { useDispatch, useSelector } from "react-redux";
 import { getUser } from "../../redux/features/auth/authSlice";
 import Loader from "../../components/Loader/Loader";
+import UserStats from "../../components/userStats/UserStats";
 
 function Profile() {
   useRedirectLoggedOutUSer("/login");
@@ -15,23 +16,31 @@ function Profile() {
     (state) => state.auth
   );
   const initialState = {
-    name: user.name || "",
-    email: user.email || "",
-    phone: user.phone || "",
-    bio: user.bio || "",
-    photo: user.photo || "",
-    role: user.role || "",
-    isVerified: user.isVerified || false,
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    bio: user?.bio || "",
+    photo: user?.photo || "",
+    role: user?.role || "",
+    isVerified: user?.isVerified || false,
   };
   const [profile, setProfile] = useState(initialState);
+  const [profileImage, setProfileImage] = useState(initialState);
+  const [imagePreview, setImagePreview] = useState(initialState);
 
   useEffect(() => {
     //whenever the page load, it will just get the user
     dispatch(getUser());
   }, [dispatch]);
 
-  const handleImageChange = () => {};
-  const handleInputChange = () => {};
+  const handleImageChange = (e) => {
+    setProfileImage(e.target.file[0]);
+    setImagePreview(URL.createObjectURL(e.target.file[0]));
+  };
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setProfile({ ...profile, [name]: value });
+  };
   return (
     <section>
       <div className="container">
@@ -43,7 +52,10 @@ function Profile() {
             <>
               <div className="profile-photo">
                 <div>
-                  <img src={profile?.photo} alt="Profileimg" />
+                  <img
+                    src={imagePreview === null ? user?.photo : imagePreview}
+                    alt="Profileimg"
+                  />
                   <h3>Role: {profile.role}</h3>
                 </div>
               </div>
