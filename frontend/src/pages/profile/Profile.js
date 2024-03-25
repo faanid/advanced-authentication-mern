@@ -8,6 +8,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { getUser } from "../../redux/features/auth/authSlice";
 import Loader from "../../components/Loader/Loader";
 import UserStats from "../../components/userStats/UserStats";
+import { toast } from "react-toastify";
+
+const cloud_name = process.env.REACT_APP_CLOUD_NAME;
+const upload_preset = process.env.REACT_APP_UPLOAD_PRESET;
 
 function Profile() {
   useRedirectLoggedOutUSer("/login");
@@ -25,8 +29,8 @@ function Profile() {
     isVerified: user?.isVerified || false,
   };
   const [profile, setProfile] = useState(initialState);
-  const [profileImage, setProfileImage] = useState(initialState);
-  const [imagePreview, setImagePreview] = useState(initialState);
+  const [profileImage, setProfileImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
     //whenever the page load, it will just get the user
@@ -41,6 +45,38 @@ function Profile() {
     const { name, value } = e.target;
     setProfile({ ...profile, [name]: value });
   };
+
+  const saveProfile = async (e) => {
+    e.preventDefault();
+    let imageURL;
+
+    try {
+      if (
+        profileImage !== null &&
+        (profileImage.type === "image/jpeg" ||
+          profileImage.type === "image/jpg" ||
+          profileImage.type === "image/png")
+      ) {
+        const image = new FormData();
+        image.append("file", profileImage);
+        image.append("cloud_name", cloud_name);
+        image.append("upload_preset", upload_preset);
+
+        // Save image to Cloudinary
+        const response = await fetch(
+          "https://api.cloudinary.com/v1_1/johndoe/image/upload", //change to your url
+          { method: "post", body: image }
+        );
+        const imgData = await response.json();
+        console.log(imgData);
+        imageURL = imgData.url.toString();
+      }
+      toast.success("Image Uploaded");
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   return (
     <section>
       <div className="container">
@@ -59,7 +95,7 @@ function Profile() {
                   <h3>Role: {profile.role}</h3>
                 </div>
               </div>
-              <form>
+              <form onSubmit={saveProfile}>
                 <p>
                   <label>Change Photo:</label>
                   <input
