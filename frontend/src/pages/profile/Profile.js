@@ -1,11 +1,16 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import Card from "../../components/card/Card";
 import profileImg from "../../assets/avatarr.png";
 import "./Profile.scss";
 import PageMenu from "../../components/pageMenu/PageMenu";
 import useRedirectLoggedOutUSer from "../../customHook/useRedirectLoggedOutUser";
 import { useDispatch, useSelector } from "react-redux";
-import { getUser } from "../../redux/features/auth/authSlice";
+import {
+  getUser,
+  selectIsLoggedIn,
+  selectUser,
+  updateUser,
+} from "../../redux/features/auth/authSlice";
 import Loader from "../../components/Loader/Loader";
 import UserStats from "../../components/userStats/UserStats";
 import { toast } from "react-toastify";
@@ -71,88 +76,122 @@ function Profile() {
         console.log(imgData);
         imageURL = imgData.url.toString();
       }
-      toast.success("Image Uploaded");
+      // Save profile to MongoD
+      const userData = {
+        name: profile.name,
+        phone: profile.phone,
+        bio: profile.bio,
+        photo: profileImage ? imageURL : profile.photo,
+      };
+
+      dispatch(updateUser(userData));
     } catch (error) {
       toast.error(error.message);
     }
   };
 
+  useLayoutEffect(() => {
+    if (user) {
+      setProfile({
+        ...profile,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        photo: user.photo,
+        bio: user.bio,
+        role: user.role,
+        isVerified: user.isVerified,
+      });
+    }
+  }, [user]);
+
   return (
-    <section>
-      <div className="container">
-        {isLoading && <Loader />}
-        <PageMenu />
-        <h2>Profile</h2>
-        <div className="--flex-start profile">
-          <Card cardClass={"card"}>
-            <>
-              <div className="profile-photo">
-                <div>
-                  <img
-                    src={imagePreview === null ? user?.photo : imagePreview}
-                    alt="Profileimg"
-                  />
-                  <h3>Role: {profile.role}</h3>
-                </div>
-              </div>
-              <form onSubmit={saveProfile}>
-                <p>
-                  <label>Change Photo:</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    name="image"
-                    onChange={handleImageChange}
-                  />
-                </p>
-                <p>
-                  <label>Name:</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={profile?.name}
-                    onChange={handleInputChange}
-                  />
-                </p>
-                <p>
-                  <label>Email:</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={profile?.email}
-                    onChange={handleInputChange}
-                    disabled
-                  />
-                </p>
-                <p>
-                  <label>Phone:</label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={profile?.phone}
-                    onChange={handleInputChange}
-                  />
-                </p>
-                <p>
-                  <label>Bio:</label>
-                  <textarea
-                    name="bio"
-                    value={profile?.bio}
-                    onChange={handleInputChange}
-                    cols="30"
-                    rows="10"
-                  ></textarea>
-                </p>
-                <button className="--btn --btn-primary --btn-block">
-                  Update Profile
-                </button>
-              </form>
-            </>
-          </Card>
+    <>
+      {isLoading && <Loader />}
+      <section>
+        <div className="container">
+          <PageMenu />
+          <h2>Profile</h2>
+          <div className="--flex-start profile">
+            <Card cardClass={"card"}>
+              {!isLoading && user && (
+                <>
+                  <div className="profile-photo">
+                    <div>
+                      <img
+                        src={imagePreview === null ? user?.photo : imagePreview}
+                        alt="Profileimg"
+                      />
+                      <h3>Role: {profile.role}</h3>
+                    </div>
+                  </div>
+                  <form onSubmit={saveProfile}>
+                    <p>
+                      <label>Change Photo:</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        name="image"
+                        onChange={handleImageChange}
+                      />
+                    </p>
+                    <p>
+                      <label>Name:</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={profile?.name}
+                        onChange={handleInputChange}
+                      />
+                    </p>
+                    <p>
+                      <label>Email:</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={profile?.email}
+                        onChange={handleInputChange}
+                        disabled
+                      />
+                    </p>
+                    <p>
+                      <label>Phone:</label>
+                      <input
+                        type="text"
+                        name="phone"
+                        value={profile?.phone}
+                        onChange={handleInputChange}
+                      />
+                    </p>
+                    <p>
+                      <label>Bio:</label>
+                      <textarea
+                        name="bio"
+                        value={profile?.bio}
+                        onChange={handleInputChange}
+                        cols="30"
+                        rows="10"
+                      ></textarea>
+                    </p>
+                    <button className="--btn --btn-primary --btn-block">
+                      Update Profile
+                    </button>
+                  </form>
+                </>
+              )}
+            </Card>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </>
   );
 }
+
+export const UserName = () => {
+  const user = useSelector(selectUser);
+
+  const username = user?.name || "...";
+  return <p className="--color-white">Hi, {username} |</p>;
+};
 
 export default Profile;

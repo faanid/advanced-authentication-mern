@@ -230,6 +230,7 @@ const authSlice = createSlice({
         state.user = action.payload;
         state.isSuccess = true;
         state.isLoggedIn = true;
+        toast.success("User Updated");
       })
       .addCase(updateUser.rejected, (state, action) => {
         state.isLoading = false;
