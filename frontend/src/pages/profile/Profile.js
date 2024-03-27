@@ -14,6 +14,7 @@ import {
 import Loader from "../../components/Loader/Loader";
 import UserStats from "../../components/userStats/UserStats";
 import { toast } from "react-toastify";
+import Notification from "../../components/notification/Notification";
 
 const cloud_name = process.env.REACT_APP_CLOUD_NAME;
 const upload_preset = process.env.REACT_APP_UPLOAD_PRESET;
@@ -116,6 +117,7 @@ function Profile() {
   return (
     <>
       {isLoading && <Loader />}
+      {!profile.isVerified && <Notification />}
       <section>
         <div className="container">
           <PageMenu />
