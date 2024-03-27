@@ -71,7 +71,7 @@ export const getLoginStatus = createAsyncThunk(
   async (_, thunkAPI) => {
     // _  means : we not sending any data to the backend
     try {
-      return await authService.loginStatus();
+      return await authService.getLoginStatus();
     } catch (error) {
       const message =
         (error.response &&
