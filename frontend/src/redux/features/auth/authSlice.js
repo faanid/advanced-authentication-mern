@@ -137,6 +137,25 @@ export const sendVerificationEmail = createAsyncThunk(
   }
 );
 
+// Verify User
+export const verifyUser = createAsyncThunk(
+  "auth/verifyUser",
+  async (verificationToken, thunkAPI) => {
+    try {
+      return await authService.verifyUser(verificationToken);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -268,6 +287,22 @@ const authSlice = createSlice({
         toast.success(action.payload);
       })
       .addCase(sendVerificationEmail.rejected, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload;
+        state.isError = true;
+        toast.error(action.payload);
+      })
+      // Verify User
+      .addCase(verifyUser.pending, (state, action) => {
+        state.isLoading = true;
+      })
+      .addCase(verifyUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(verifyUser.rejected, (state, action) => {
         state.isLoading = false;
         state.message = action.payload;
         state.isError = true;
