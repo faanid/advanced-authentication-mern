@@ -31,7 +31,7 @@ axios.defaults.withCredentials = true;
  * ! For Alert
  * ? for questions cm
  * TODO: for todo cm
- * @param myparam the parameter for this method
+ * @param myParam the parameter for this method
  */
 
 //! cm for alert
