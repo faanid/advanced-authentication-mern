@@ -25,6 +25,21 @@ import {
 
 axios.defaults.withCredentials = true;
 
+/**
+ * Better comments Extension
+ * * Important
+ * ! For Alert
+ * ? for questions cm
+ * TODO: for todo cm
+ * @param myParam the parameter for this method
+ */
+
+//! cm for alert
+//* this is highlight
+//? this is a query
+////this  line of code 
+//TODO: create some test cases
+
 function App() {
   const dispatch = useDispatch();
   const isLoggedIn = useSelector(selectIsLoggedIn);
