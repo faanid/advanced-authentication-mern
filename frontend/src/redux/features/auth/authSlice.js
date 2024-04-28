@@ -150,7 +150,23 @@ export const verifyUser = createAsyncThunk(
           error.response.data.message) ||
         error.message ||
         error.toString();
-
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+// Change password
+export const changePassword = createAsyncThunk(
+  "auth/changePassword",
+  async (userData, thunkAPI) => {
+    try {
+      return await authService.changePassword(userData);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
       return thunkAPI.rejectWithValue(message);
     }
   }
@@ -303,6 +319,22 @@ const authSlice = createSlice({
         toast.success(action.payload);
       })
       .addCase(verifyUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload;
+        state.isError = true;
+        toast.error(action.payload);
+      })
+      // Change Password
+      .addCase(changePassword.pending, (state, action) => {
+        state.isLoading = true;
+      })
+      .addCase(changePassword.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(changePassword.rejected, (state, action) => {
         state.isLoading = false;
         state.message = action.payload;
         state.isError = true;
