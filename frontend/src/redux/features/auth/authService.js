@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API_URL = `${BACKEND_URL}/api/users/`;
+export const API_URL = `${BACKEND_URL}/api/users/`;
 
 // Validate email
 export const validateEmail = (email) => {
@@ -58,6 +58,7 @@ const verifyUser = async (verificationToken) => {
   return response.data.message;
 };
 // Change Password
+
 const changePassword = async (userData) => {
   const response = await axios.patch(API_URL + "changePassword", userData);
   return response.data.message;
