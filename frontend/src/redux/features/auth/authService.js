@@ -57,10 +57,15 @@ const verifyUser = async (verificationToken) => {
   );
   return response.data.message;
 };
-// Change Password
 
+// Change Password
 const changePassword = async (userData) => {
   const response = await axios.patch(API_URL + "changePassword", userData);
+  return response.data.message;
+};
+// Forgot Password
+const forgotPassword = async (userData) => {
+  const response = await axios.post(API_URL + "forgotPassword", userData);
   return response.data.message;
 };
 
@@ -74,6 +79,7 @@ const authService = {
   sendVerificationEmail,
   verifyUser,
   changePassword,
+  forgotPassword,
 };
 
 export default authService;
