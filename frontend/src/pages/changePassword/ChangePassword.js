@@ -14,6 +14,7 @@ import {
   RESET,
 } from "../../redux/features/auth/authSlice";
 import { Spinner } from "../../components/Loader/Loader";
+import { sendAutomatedEmail } from "../../redux/features/email/emailSlice";
 
 const initialState = {
   oldPassword: "",
@@ -49,7 +50,17 @@ const ChangePassword = () => {
       oldPassword,
       password,
     };
+
+    const emailData = {
+      subject: "Password Changed - AUTH- F",
+      send_to: user.email,
+      reply_to: "noreply@fanid",
+      template: "changePassword",
+      url: "/forgot",
+    };
+
     await dispatch(changePassword(userData));
+    await dispatch(sendAutomatedEmail(emailData));
     await dispatch(logout());
     await dispatch(RESET(userData));
 
