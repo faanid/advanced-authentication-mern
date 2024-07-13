@@ -599,6 +599,8 @@ const forgotPassword = asyncHandler(async (req, res) => {
 const resetPassword = asyncHandler(async (req, res) => {
   const { resetToken } = req.params;
   const { password } = req.body;
+  console.log(resetToken);
+  console.log(password);
 
   const hashedToken = hashToken(resetToken);
 
