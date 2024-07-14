@@ -205,6 +205,23 @@ export const resetPassword = createAsyncThunk(
     }
   }
 );
+// Get Users
+export const getUsers = createAsyncThunk(
+  "auth/getUsers",
+  async (_, thunkAPI) => {
+    try {
+      return await authService.getUsers();
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -401,6 +418,21 @@ const authSlice = createSlice({
         toast.success(action.payload);
       })
       .addCase(resetPassword.rejected, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload;
+        state.isError = true;
+        toast.error(action.payload);
+      })
+      // getUsers
+      .addCase(getUsers.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(getUsers.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.users = action.payload;
+      })
+      .addCase(getUsers.rejected, (state, action) => {
         state.isLoading = false;
         state.message = action.payload;
         state.isError = true;
