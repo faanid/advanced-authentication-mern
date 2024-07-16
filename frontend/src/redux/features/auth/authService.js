@@ -73,6 +73,11 @@ const getUsers = async () => {
   const response = await axios.get(API_URL + "getUsers");
   return response.data;
 };
+// Delete User
+const deleteUsers = async (id) => {
+  const response = await axios.delete(API_URL + id);
+  return response.data.message;
+};
 // Reset Password
 const resetPassword = async (userData, resetToken) => {
   const response = await axios.patch(
@@ -95,6 +100,7 @@ const authService = {
   forgotPassword,
   resetPassword,
   getUsers,
+  deleteUsers,
 };
 
 export default authService;
