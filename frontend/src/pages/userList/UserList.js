@@ -90,7 +90,7 @@ function UserList() {
                           <td>{email}</td>
                           <td>{role}</td>
                           <td>
-                            <ChangeRole id={_id} email={email} />
+                            <ChangeRole _id={_id} email={email} />
                           </td>
                           <td>
                             <span>

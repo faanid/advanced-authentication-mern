@@ -89,7 +89,7 @@ const resetPassword = async (userData, resetToken) => {
 
 // Upgrade User
 const upgradeUser = async (userData) => {
-  const response = await axios.patch(API_URL + "upgradeUser", userData);
+  const response = await axios.post(API_URL + "upgradeUser", userData);
   return response.data.message;
 };
 
