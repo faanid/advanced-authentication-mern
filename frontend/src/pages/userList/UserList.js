@@ -60,7 +60,7 @@ function UserList() {
   }, [dispatch, users, search]);
 
   //Begin Pagination
-  const itemsPerPage = 1;
+  const itemsPerPage = 5;
   const [itemOffset, setItemOffset] = useState(0);
 
   const endOffset = itemOffset + itemsPerPage;
@@ -79,7 +79,7 @@ function UserList() {
     <section>
       <div className="container">
         <PageMenu />
-        {/* <UserStats /> */}
+        <UserStats />
 
         <div className="user-list">
           {isLoading && <Spinner />}
@@ -145,7 +145,7 @@ function UserList() {
             breakLabel="..."
             nextLabel="Next"
             onPageChange={handlePageClick}
-            pageRangeDisplayed={5}
+            pageRangeDisplayed={3}
             pageCount={pageCount}
             previousLabel="Prev"
             renderOnZeroPageCount={null}
