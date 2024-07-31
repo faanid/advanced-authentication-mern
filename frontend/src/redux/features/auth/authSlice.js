@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import authService from "./authService";
+import useRedirectLoggedOutUSer from "../../../customHook/useRedirectLoggedOutUser";
 
 const initialState = {
   isLoggedIn: false,
@@ -11,6 +12,8 @@ const initialState = {
   isSuccess: false,
   isLoading: false,
   message: "",
+  verifiedUsers: 0,
+  suspendedUsers: 0,
 };
 
 // Register User
@@ -267,6 +270,34 @@ const authSlice = createSlice({
       state.isSuccess = false;
       state.isLoading = false;
       state.message = "";
+    },
+    CALC_VERIFIED_USER(state, action) {
+      const array = [];
+      state.users.map((user) => {
+        const { isVerified } = user;
+        return array.push(isVerified);
+      });
+      let count = 0;
+      array.forEach((item) => {
+        if (item === true) {
+          count += 1;
+        }
+      });
+      state.verifiedUsers = count;
+    },
+    CALC_SUSPENDED_USER(state, action) {
+      const array = [];
+      state.users.map((user) => {
+        const { role } = user;
+        return array.push(role);
+      });
+      let count = 0;
+      array.forEach((item) => {
+        if (item === "suspended") {
+          count += 1;
+        }
+      });
+      state.suspendedUsers = count;
     },
   },
 
