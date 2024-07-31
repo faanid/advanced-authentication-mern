@@ -260,6 +260,24 @@ export const upgradeUser = createAsyncThunk(
   }
 );
 
+// send login code
+export const sendLoginCode = createAsyncThunk(
+  "auth/sendLoginCode",
+  async (email, thunkAPI) => {
+    try {
+      return await authService.sendLoginCode(email);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -342,6 +360,10 @@ const authSlice = createSlice({
         state.isError = true;
         state.user = null;
         toast.error(action.payload);
+        if (action.payload.includes("New browser")) {
+          //this string from userController.js -line-138- error message
+          state.twoFactor = true;
+        }
       })
       //Logout User
       .addCase(logout.pending, (state, action) => {
@@ -530,6 +552,22 @@ const authSlice = createSlice({
         toast.success(action.payload);
       })
       .addCase(upgradeUser.rejected, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload;
+        state.isError = true;
+        toast.error(action.payload);
+      })
+      //send login code
+      .addCase(sendLoginCode.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(sendLoginCode.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(sendLoginCode.rejected, (state, action) => {
         state.isLoading = false;
         state.message = action.payload;
         state.isError = true;
