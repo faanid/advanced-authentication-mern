@@ -538,7 +538,8 @@ const authSlice = createSlice({
   },
 });
 
-export const { RESET } = authSlice.actions;
+export const { RESET, CALC_SUSPENDED_USER, CALC_VERIFIED_USER } =
+  authSlice.actions;
 
 export const selectIsLoggedIn = (state) => state.auth.isLoggedIn;
 export const selectUser = (state) => state.auth.user;
