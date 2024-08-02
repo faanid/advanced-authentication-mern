@@ -277,6 +277,23 @@ export const sendLoginCode = createAsyncThunk(
     }
   }
 );
+//login with code
+export const loginWithCode = createAsyncThunk(
+  "auth/loginWithCode",
+  async (code, email, thunkAPI) => {
+    try {
+      return await authService.loginWithCode(code, email);
+    } catch (error) {
+      const message =
+        (error.response &&
+          error.response.data &&
+          error.response.data.message) ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -571,6 +588,25 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.message = action.payload;
         state.isError = true;
+        toast.error(action.payload);
+      })
+      //login with code
+      .addCase(loginWithCode.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(loginWithCode.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.isLoggedIn = true;
+        state.twoFactor = false;
+        state.user = action.payload;
+        toast.success(action.payload);
+      })
+      .addCase(loginWithCode.rejected, (state, action) => {
+        state.isLoading = false;
+        state.message = action.payload;
+        state.isError = true;
+        state.user = null;
         toast.error(action.payload);
       });
   },
