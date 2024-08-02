@@ -7,7 +7,11 @@ import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { useDispatch, useSelector } from "react-redux";
 import { validateEmail } from "../../redux/features/auth/authService";
 import toast from "react-toastify";
-import { login, RESET } from "../../redux/features/auth/authSlice";
+import {
+  login,
+  RESET,
+  sendLoginCode,
+} from "../../redux/features/auth/authSlice";
 import Loader from "../../components/Loader/Loader";
 
 const initialState = {
@@ -26,9 +30,8 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { isLoading, isLoggedIn, isSuccess, message } = useSelector(
-    (state) => state.auth
-  );
+  const { isLoading, isLoggedIn, isSuccess, message, isError, twoFactor } =
+    useSelector((state) => state.auth);
 
   const loginUser = async (e) => {
     e.preventDefault();
@@ -50,8 +53,13 @@ const Login = () => {
       navigate("/profile");
     }
 
+    if (isError && twoFactor) {
+      dispatch(sendLoginCode(email));
+      navigate(`/loginWithCode/${email}`);
+    }
+
     dispatch(RESET());
-  }, [isLoggedIn, isSuccess, dispatch, navigate]);
+  }, [isLoggedIn, isSuccess, dispatch, navigate, isError, twoFactor, email]);
 
   return (
     <div className={`container ${styles.auth}`}>
