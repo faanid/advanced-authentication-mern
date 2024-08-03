@@ -656,7 +656,13 @@ const changePassword = asyncHandler(async (req, res) => {
   }
 });
 
-//
+// Login with Google
+const loginWithGoogle = asyncHandler(async (req, res) => {
+  const { userToken } = req.body;
+  console.log(userToken);
+
+  res.send("Google login");
+});
 
 module.exports = {
   registerUser,
@@ -676,4 +682,5 @@ module.exports = {
   changePassword,
   sendLoginCode,
   loginWithCode,
+  loginWithGoogle,
 };
