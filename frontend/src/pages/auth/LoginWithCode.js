@@ -1,20 +1,54 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate, useParams, useDispatch } from "react-router-dom";
 import { GrInsecure } from "react-icons/gr";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { AiOutlineMail } from "react-icons/ai";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { loginWithCode, RESET } from "../../redux/features/auth/authSlice";
+import Loader from "../../components/Loader/Loader";
 
 const LoginWithCode = () => {
   const [loginCode, setLoginCode] = useState("");
+  const { email } = useParams();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const handleInputChange = () => {};
+  const { isLoading, isLoggedIn, isSuccess } = useSelector(
+    (state) => state.auth
+  );
 
-  const loginUser = () => {};
+  const loginUserWithCode = async (e) => {
+    e.preventDefault();
+
+    if (loginCode === "") {
+      return toast.error("Please fill in the login code");
+    }
+    if (loginCode.length !== 6) {
+      return toast.error("Access code must be 6 characters");
+    }
+
+    const code = {
+      loginCode,
+    };
+
+    await dispatch(loginWithCode({ code, email }));
+  };
+
+  useEffect(() => {
+    //some conditions that i wanna to check
+    if (isSuccess && isLoggedIn) {
+      navigate("/profile");
+    }
+
+    dispatch(RESET());
+  }, [isLoggedIn, isSuccess, dispatch, navigate]);
 
   return (
     <div className={`container ${styles.auth}`}>
+      {isLoading && <Loader />}
       <Card>
         <div className={styles.form}>
           <div className="--flex-center">
@@ -22,7 +56,7 @@ const LoginWithCode = () => {
           </div>
           <h2>Enter Access Code</h2>
 
-          <form onSubmit={loginUser}>
+          <form onSubmit={loginUserWithCode}>
             <input
               type="text"
               placeholder="Access Code"
