@@ -22,6 +22,7 @@ import {
   selectIsLoggedIn,
   selectUser,
 } from "./redux/features/auth/authSlice";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 axios.defaults.withCredentials = true;
 
@@ -37,7 +38,7 @@ axios.defaults.withCredentials = true;
 //! cm for alert
 //* this is highlight
 //? this is a query
-////this  line of code 
+////this  line of code
 //TODO: create some test cases
 
 function App() {
@@ -56,53 +57,56 @@ function App() {
     <>
       <BrowserRouter>
         <ToastContainer />
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Layout>
-                <Home />
-              </Layout>
-            }
-          />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot" element={<Forgot />} />
-          <Route path="/resetPassword/:resetToken" element={<Reset />} />
-          <Route path="/loginWithCode/:email" element={<LoginWithCode />} />
-          <Route
-            path="/verify/:verificationToken"
-            element={
-              <Layout>
-                <Verify />
-              </Layout>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <Layout>
-                <Profile />
-              </Layout>
-            }
-          />
-          <Route
-            path="/changePassword"
-            element={
-              <Layout>
-                <ChangePassword />
-              </Layout>
-            }
-          />
-          <Route
-            path="/users"
-            element={
-              <Layout>
-                <UserList />
-              </Layout>
-            }
-          />
-        </Routes>
+        <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <Layout>
+                  <Home />
+                </Layout>
+              }
+            />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot" element={<Forgot />} />
+            <Route path="/resetPassword/:resetToken" element={<Reset />} />
+            <Route path="/loginWithCode/:email" element={<LoginWithCode />} />
+            <Route
+              path="/verify/:verificationToken"
+              element={
+                <Layout>
+                  <Verify />
+                </Layout>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <Layout>
+                  <Profile />
+                </Layout>
+              }
+            />
+            <Route
+              path="/changePassword"
+              element={
+                <Layout>
+                  <ChangePassword />
+                </Layout>
+              }
+            />
+            <Route
+              path="/users"
+              element={
+                <Layout>
+                  <UserList />
+                </Layout>
+              }
+            />
+          </Routes>
+        </GoogleOAuthProvider>
+        ;
       </BrowserRouter>
     </>
   );
