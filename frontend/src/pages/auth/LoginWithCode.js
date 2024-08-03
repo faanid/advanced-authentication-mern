@@ -7,7 +7,11 @@ import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { AiOutlineMail } from "react-icons/ai";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import { loginWithCode, RESET } from "../../redux/features/auth/authSlice";
+import {
+  loginWithCode,
+  RESET,
+  sendLoginCode,
+} from "../../redux/features/auth/authSlice";
 import Loader from "../../components/Loader/Loader";
 
 const LoginWithCode = () => {
@@ -19,6 +23,11 @@ const LoginWithCode = () => {
   const { isLoading, isLoggedIn, isSuccess } = useSelector(
     (state) => state.auth
   );
+
+  const sendUserLoginCode = async () => {
+    await dispatch(sendLoginCode(email));
+    await dispatch(RESET());
+  };
 
   const loginUserWithCode = async (e) => {
     e.preventDefault();
@@ -76,7 +85,7 @@ const LoginWithCode = () => {
               <p>
                 <Link to="/">- Home</Link>
               </p>
-              <p className="v-link --color-primary">
+              <p onClick={sendUserLoginCode} className="v-link --color-primary">
                 <b>Resend Code</b>
               </p>
             </div>
