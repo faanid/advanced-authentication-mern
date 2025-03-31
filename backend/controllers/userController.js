@@ -603,7 +603,7 @@ const resetPassword = asyncHandler(async (req, res) => {
   const { resetToken } = req.params;
   const { password } = req.body;
   console.log(resetToken);
-  console.log(password);
+  console.log("Password received for reset.");
 
   const hashedToken = hashToken(resetToken);
 
