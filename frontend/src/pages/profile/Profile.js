@@ -13,8 +13,8 @@ import Loader from "../../components/Loader/Loader";
 import { toast } from "react-toastify";
 import Notification from "../../components/notification/Notification";
 
-const cloud_name = process.env.REACT_APP_CLOUD_NAME;
-const upload_preset = process.env.REACT_APP_UPLOAD_PRESET;
+const cloud_name = import.meta.env.VITE_CLOUD_NAME;
+const upload_preset = import.meta.env.VITE_UPLOAD_PRESET;
 
 export const shortenText = (text, n) => {
   if (text.length > n) {
