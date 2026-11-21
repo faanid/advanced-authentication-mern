@@ -191,6 +191,16 @@ if (!mongoUri || !jwtSecret) {
     assert.equal(listedUsers.some((user) => "password" in user), false);
     assert.equal(listedUsers.some((user) => "userAgent" in user), false);
 
+    const oversizedLogin = await request("/api/users/login", {
+      method: "POST",
+      body: {
+        email: "integration.user@example.com",
+        password: "a".repeat(73),
+      },
+    });
+
+    assert.equal(oversizedLogin.status, 400);
+
     const newDeviceLogin = await request("/api/users/login", {
       method: "POST",
       agent: "unrecognized-browser",
