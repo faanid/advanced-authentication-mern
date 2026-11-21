@@ -92,7 +92,7 @@ if (!mongoUri || !jwtSecret) {
     assert.equal(registeredUser.isVerified, false);
     assert.equal("password" in registeredUser, false);
 
-    let storedUser = await User.findById(registeredUser._id);
+    let storedUser = await User.findById(registeredUser._id).select("+password");
 
     assert.ok(storedUser);
     assert.notEqual(storedUser.password, "InitialPassword123");
@@ -212,7 +212,7 @@ if (!mongoUri || !jwtSecret) {
 
     assert.equal(passwordChange.status, 200);
 
-    storedUser = await User.findById(registeredUser._id);
+    storedUser = await User.findById(registeredUser._id).select("+password");
 
     assert.equal(
       await bcrypt.compare("UpdatedPassword456", storedUser.password),
