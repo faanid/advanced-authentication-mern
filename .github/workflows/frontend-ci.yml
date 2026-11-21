@@ -81,10 +81,12 @@ jobs:
         env:
           HEAD_REF: ${{ github.head_ref }}
         run: |
-          if ! git diff --quiet -- frontend/package-lock.json; then
-            git config user.name "github-actions[bot]"
-            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -f frontend/package-lock.json ]; then
             git add frontend/package-lock.json
-            git commit -m "chore(frontend): refresh dependency lockfile"
-            git push origin "HEAD:${HEAD_REF}"
+            if ! git diff --cached --quiet; then
+              git config user.name "github-actions[bot]"
+              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git commit -m "chore(frontend): refresh dependency lockfile"
+              git push origin "HEAD:${HEAD_REF}"
+            fi
           fi
