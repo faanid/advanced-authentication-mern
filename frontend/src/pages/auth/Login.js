@@ -44,26 +44,31 @@ const Login = () => {
       return toast.error("Please enter a valid email");
     }
     const userData = { email, password };
-    // console.log(userData);
     await dispatch(login(userData));
   };
 
   useEffect(() => {
-    //some conditions that i wanna to check
     if (isSuccess && isLoggedIn) {
       navigate("/profile");
+      dispatch(RESET());
+      return;
     }
 
     if (isError && twoFactor) {
-      dispatch(sendLoginCode(email));
-      navigate(`/loginWithCode/${email}`);
+      dispatch(RESET());
+      dispatch(sendLoginCode(email))
+        .unwrap()
+        .then(() => navigate(`/loginWithCode/${encodeURIComponent(email)}`))
+        .catch(() => {});
+      return;
     }
 
-    dispatch(RESET());
+    if (isError || isSuccess) {
+      dispatch(RESET());
+    }
   }, [isLoggedIn, isSuccess, dispatch, navigate, isError, twoFactor, email]);
 
   const googleLogin = async (credentialResponse) => {
-    // console.log(credentialResponse);
     await dispatch(
       loginWithGoogle({ userToken: credentialResponse.credential })
     );
@@ -78,7 +83,7 @@ const Login = () => {
           </div>
           <h2>Login</h2>
           <div className="--flex-center">
-            {/* <button className="--btn --btn-google">Login With Google </button> */}
+            
             <GoogleLogin
               onSuccess={googleLogin}
               onError={() => {
@@ -103,14 +108,7 @@ const Login = () => {
               value={password}
               onChange={handleInputChange}
             />
-            {/* <input
-              type="password"
-              placeholder="Password"
-              required
-              name="password"
-              value={password}
-              onChange={handleInputChange}
-            /> */}
+            
             <button type="submit" className="--btn --btn-primary --btn-block">
               Login
             </button>
