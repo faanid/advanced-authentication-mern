@@ -14,6 +14,22 @@ const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const hashLoginCode = (code) =>
   crypto.createHmac("sha256", process.env.JWT_SECRET).update(code).digest("hex");
 
+const setAuthCookie = (res, token) => {
+  setAuthCookie(res, token);
+};
+
+const clearAuthCookie = (res) => {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  res.clearCookie("token", {
+    path: "/",
+    httpOnly: true,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
+  });
+};
+
+
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -52,13 +68,7 @@ const registerUser = asyncHandler(async (req, res) => {
   const token = generateToken(user._id);
 
   //Send HTTP-only cookie
-  res.cookie("token", token, {
-    path: "/",
-    httpOnly: true,
-    expires: new Date(Date.now() + 1000 * 86400), //1 day
-    sameSite: "none",
-    secure: true,
-  });
+  setAuthCookie(res, token);
 
   if (user) {
     const { _id, name, email, phone, bio, photo, role, isVerified } = user;
@@ -116,13 +126,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
   if (user && passwordIsCorrect) {
     // Send HTTP-only cookie
-    res.cookie("token", token, {
-      path: "/",
-      httpOnly: true,
-      expires: new Date(Date.now() + 1000 * 86400), // 1 day
-      sameSite: "none",
-      secure: true,
-    });
+    setAuthCookie(res, token);
     const { _id, name, email, phone, bio, photo, role, isVerified } = user;
 
     res.status(200).json({
@@ -210,28 +214,25 @@ const sendLoginCode = asyncHandler(async (req, res) => {
 });
 
 const getUser = asyncHandler(async (req, res) => {
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).select("-password");
 
-  if (user) {
-    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
-
-    res.status(201).json({
-      _id,
-      name,
-      email,
-      phone,
-      bio,
-      photo,
-      role,
-      isVerified,
-    });
-  } else {
-    res.status(400);
-    throw new Error("No user found");
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
   }
+
+  return res.status(200).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    bio: user.bio,
+    photo: user.photo,
+    role: user.role,
+    isVerified: user.isVerified,
+  });
 });
 
-// Login with Code
 const loginWithCode = asyncHandler(async (req, res) => {
   const email = String(req.params.email || "").trim().toLowerCase();
   const loginCode = String(req.body.loginCode || "").trim();
@@ -417,63 +418,55 @@ const verifyToken = asyncHandler(async (req, res) => {
 
 /// Logout User
 const logoutUser = asyncHandler(async (req, res) => {
-  res.cookie("token", "", {
-    path: "/",
-    httpOnly: true,
-    expires: new Date(0),
-    sameSite: "none",
-    secure: true,
-  });
-  return res.status(200).json({ message: "Logout successfully" });
+  clearAuthCookie(res);
+  return res.status(200).json({ message: "Logout successful" });
 });
 
-// Update User
 const updateUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
-
-  if (user) {
-    const { name, email, phone, bio, photo, role, isVerified } = user;
-
-    user.email = email;
-    user.name = req.body.name || name;
-    user.phone = req.body.phone || phone;
-    user.bio = req.body.phone || bio;
-    user.photo = req.body.photo || photo;
-
-    //save
-    const updatedUser = await user.save();
-
-    //send response back to frontend
-    res.status(201).json({
-      _id: updatedUser._id,
-      name: updatedUser.name,
-      email: updatedUser.email,
-      phone: updatedUser.phone,
-      bio: updatedUser.bio,
-      photo: updatedUser.photo,
-      role: updatedUser.role,
-      isVerified: updatedUser.isVerified,
-    });
-  } else {
-    res.status(404);
-    throw new Error("No user found");
-  }
-});
-
-// Delete User
-const deleteUser = asyncHandler(async (req, res) => {
-  const user = User.findById(req.params.id);
 
   if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
 
-  await user.remove();
-  res.status(200).json({ message: "User deleted successfully" });
+  const { name, phone, bio, photo } = req.body;
+
+  if (name !== undefined) user.name = String(name).trim();
+  if (phone !== undefined) user.phone = String(phone).trim();
+  if (bio !== undefined) user.bio = String(bio).trim();
+  if (photo !== undefined) user.photo = String(photo).trim();
+
+  const updatedUser = await user.save();
+
+  return res.status(200).json({
+    _id: updatedUser._id,
+    name: updatedUser.name,
+    email: updatedUser.email,
+    phone: updatedUser.phone,
+    bio: updatedUser.bio,
+    photo: updatedUser.photo,
+    role: updatedUser.role,
+    isVerified: updatedUser.isVerified,
+  });
 });
 
-// Get Users
+const deleteUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+
+  if (!user) {
+    res.status(404);
+    throw new Error("User not found");
+  }
+
+  await Promise.all([
+    User.deleteOne({ _id: user._id }),
+    Token.deleteMany({ userId: user._id }),
+  ]);
+
+  return res.status(200).json({ message: "User deleted successfully" });
+});
+
 const getUsers = asyncHandler(async (req, res) => {
   const users = await User.find().sort("-createdAt").select("-password");
   if (!users) {
@@ -485,78 +478,87 @@ const getUsers = asyncHandler(async (req, res) => {
 
 // Get Login Status
 const loginStatus = asyncHandler(async (req, res) => {
-  const token = req.cookies.token;
+  const token = req.cookies?.token;
+
   if (!token) {
-    return res.json(false);
+    return res.status(200).json(false);
   }
 
-  // Verify Token
-  const verified = jwt.verify(token, process.env.JWT_SECRET);
+  try {
+    jwt.verify(token, process.env.JWT_SECRET);
+    return res.status(200).json(true);
+  } catch (error) {
+    if (
+      ["JsonWebTokenError", "TokenExpiredError", "NotBeforeError"].includes(
+        error.name
+      )
+    ) {
+      return res.status(200).json(false);
+    }
 
-  if (verified) {
-    return res.json(true);
+    throw error;
   }
-  return res.json(false);
 });
 
-// Upgrade User
 const upgradeUser = asyncHandler(async (req, res) => {
   const { role, id } = req.body;
+  const allowedRoles = ["subscriber", "author", "admin", "suspended"];
+
+  if (!id || !allowedRoles.includes(role)) {
+    res.status(400);
+    throw new Error("A valid user ID and role are required");
+  }
 
   const user = await User.findById(id);
-
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found!");
-  }
-
-  user.role = role;
-  await user.save();
-
-  res.status(200).json({
-    message: `User role updated to ${role}`,
-  });
-});
-
-// Send Automated emails
-const sendAutomatedEmail = asyncHandler(async (req, res) => {
-  const { subject, send_to, reply_to, template, url } = req.body;
-
-  if (!subject || !send_to || !reply_to || !template) {
-    res.status(500);
-    throw new Error("Missing email parameter");
-  }
-
-  // Get user
-  const user = await User.findOne({ email: send_to });
 
   if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
 
-  const sent_from = process.env.EMAIL_USER;
-  const name = user.name;
-  const link = `${process.env.FRONTEND_URL}${url}`;
+  user.role = role;
+  await user.save();
 
-  try {
-    await sendEmail(
-      subject,
-      send_to,
-      sent_from,
-      reply_to,
-      template,
-      name,
-      link
-    );
-    res.status(200).json({ message: "Email Sent" });
-  } catch (error) {
-    res.status(500);
-    throw new Error("Email not send, please try again.");
-  }
+  return res.status(200).json({
+    message: "User role updated successfully",
+    userId: user._id,
+    role: user.role,
+  });
 });
 
-// Forgot Password
+const sendAutomatedEmail = asyncHandler(async (req, res) => {
+  const { id, role } = req.body;
+  const allowedRoles = ["subscriber", "author", "admin", "suspended"];
+
+  if (!id || !allowedRoles.includes(role)) {
+    res.status(400);
+    throw new Error("A valid user ID and role are required");
+  }
+
+  const user = await User.findById(id);
+
+  if (!user || user.role !== role) {
+    res.status(404);
+    throw new Error("Updated user not found");
+  }
+
+  if (!process.env.FRONTEND_URL) {
+    throw new Error("FRONTEND_URL must be configured");
+  }
+
+  await sendEmail(
+    "Your account role was updated",
+    user.email,
+    process.env.EMAIL_USER,
+    process.env.EMAIL_REPLY_TO || process.env.EMAIL_USER,
+    "changeRole",
+    user.name,
+    `${process.env.FRONTEND_URL.replace(/\\/$/, "")}/login`
+  );
+
+  return res.status(200).json({ message: "Role notification email sent" });
+});
+
 const forgotPassword = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
@@ -711,13 +713,7 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
       const token = generateToken(newUser._id);
 
       //Send HTTP-only cookie
-      res.cookie("token", token, {
-        path: "/",
-        httpOnly: true,
-        expires: new Date(Date.now() + 1000 * 86400), //1 day
-        sameSite: "none",
-        secure: true,
-      });
+      setAuthCookie(res, token);
 
       const { _id, name, email, phone, bio, photo, role, isVerified } = newUser;
 
