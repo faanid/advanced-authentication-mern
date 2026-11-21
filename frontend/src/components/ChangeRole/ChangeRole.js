@@ -20,28 +20,18 @@ function ChangeRole({ _id }) {
       return;
     }
 
-    let roleUpdated = false;
-
     try {
-      await dispatch(upgradeUser({ role: userRole, id: _id })).unwrap();
-      roleUpdated = true;
+      const updateResult = await dispatch(
+        upgradeUser({ role: userRole, id: _id })
+      );
+
+      if (updateResult.meta.requestStatus !== "fulfilled") {
+        return;
+      }
+
       setUserRole("");
-
-      try {
-        await dispatch(getUsers()).unwrap();
-      } catch (error) {
-        return;
-      }
-
-      try {
-        await dispatch(sendAutomatedEmail({ id: _id, role: userRole })).unwrap();
-      } catch (error) {
-        return;
-      }
-    } catch (error) {
-      if (!roleUpdated) {
-        toast.error(typeof error === "string" ? error : "Unable to update user role");
-      }
+      await dispatch(getUsers());
+      await dispatch(sendAutomatedEmail({ id: _id, role: userRole }));
     } finally {
       dispatch(EMAIL_RESET());
     }
