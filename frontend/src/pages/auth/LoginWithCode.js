@@ -77,7 +77,7 @@ const LoginWithCode = () => {
               required
               name="accessCode"
               value={loginCode}
-              onChange={(e) => setLoginCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) => setLoginCode(sanitizeLoginCode(e.target.value))}
             />
 
             <button type="submit" className="--btn --btn-primary --btn-block">
