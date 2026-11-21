@@ -26,7 +26,7 @@ const ChangePassword = () => {
   const [formData, setFormData] = useState(initialState);
   const { oldPassword, password2, password } = formData;
 
-  const { isLoading, user } = useSelector((state) => state.auth);
+  const { isLoading } = useSelector((state) => state.auth);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
