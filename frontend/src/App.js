@@ -56,7 +56,7 @@ function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/forgot" element={<Forgot />} />
             <Route path="/resetPassword/:resetToken" element={<Reset />} />
-            <Route path="/loginWithCode/:email" element={<LoginWithCode />} />
+            <Route path="/loginWithCode" element={<LoginWithCode />} />
             <Route
               path="/verify/:verificationToken"
               element={
