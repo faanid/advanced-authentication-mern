@@ -15,7 +15,7 @@ on:
       - ".github/workflows/frontend-ci.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   frontend:
@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -30,6 +32,12 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+
+      - name: Generate and safely update the frontend lockfile
+        working-directory: frontend
+        run: |
+          npm install --package-lock-only --ignore-scripts
+          npm audit fix --package-lock-only --ignore-scripts || true
 
       - name: Install dependencies
         working-directory: frontend
@@ -60,12 +68,25 @@ jobs:
         working-directory: frontend
         env:
           CI: true
-        run: npm test -- --watchAll=false --passWithNoTests
+        run: npm test
 
       - name: Build frontend
         working-directory: frontend
         env:
           CI: true
-          REACT_APP_BACKEND_URL: https://example.invalid
-          REACT_APP_GOOGLE_CLIENT_ID: test-client-id
+          VITE_BACKEND_URL: https://example.invalid
+          VITE_GOOGLE_CLIENT_ID: test-client-id
         run: npm run build
+
+      - name: Commit refreshed frontend lockfile
+        if: github.event_name == 'pull_request'
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if ! git diff --quiet -- frontend/package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add frontend/package-lock.json
+            git commit -m "chore(frontend): refresh dependency lockfile"
+            git push origin "HEAD:${HEAD_REF}"
+          fi
