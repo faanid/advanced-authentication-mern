@@ -52,8 +52,11 @@ function Profile() {
   }, [dispatch]);
 
   const handleImageChange = (e) => {
-    setProfileImage(e.target.file[0]);
-    setImagePreview(URL.createObjectURL(e.target.file[0]));
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setProfileImage(file);
+    setImagePreview(URL.createObjectURL(file));
   };
   const handleInputChange = (e) => {
     const { name, value } = e.target;

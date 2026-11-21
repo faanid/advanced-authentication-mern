@@ -86,7 +86,7 @@ const Register = () => {
     e.preventDefault();
 
     if (!name || !email || !password) {
-      toast.error("All fields are required");
+      return toast.error("All fields are required");
     }
     if (password.length < 6) {
       return toast.error("Password must be up to 6 characters");
@@ -100,8 +100,10 @@ const Register = () => {
 
     const userData = { name, email, password };
     // console.log(userData);
-    await dispatch(register(userData));
-    await dispatch(sendVerificationEmail());
+    const result = await dispatch(register(userData));
+    if (register.fulfilled.match(result)) {
+      await dispatch(sendVerificationEmail());
+    }
   };
 
   useEffect(() => {
@@ -178,7 +180,7 @@ const Register = () => {
                 </li>
                 <li>
                   <span className={styles.indicator}>
-                    {switchIcon(sChar)} &nbsp; At least 6 Character
+                    {switchIcon(passLength)} &nbsp; At least 6 Characters
                   </span>
                 </li>
               </ul>

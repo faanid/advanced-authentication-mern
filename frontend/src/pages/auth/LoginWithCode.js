@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams, useDispatch } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { GrInsecure } from "react-icons/gr";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { AiOutlineMail } from "react-icons/ai";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import {
   loginWithCode,

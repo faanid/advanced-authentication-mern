@@ -16,7 +16,7 @@ const icon3 = <BiUserMinus size={40} color="#fff" />;
 const icon4 = <BiUserX size={40} color="#fff" />;
 
 function UserStats() {
-  const dispatch = useDispatch;
+  const dispatch = useDispatch();
   const { users, verifiedUsers, suspendedUsers } = useSelector(
     (state) => state.auth
   );

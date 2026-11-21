@@ -6,7 +6,7 @@ import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { useDispatch, useSelector } from "react-redux";
 import { validateEmail } from "../../redux/features/auth/authService";
-import toast from "react-toastify";
+import { toast } from "react-toastify";
 import {
   login,
   loginWithGoogle,
@@ -38,8 +38,8 @@ const Login = () => {
   const loginUser = async (e) => {
     e.preventDefault();
 
-    if (email || !password) {
-      toast.error("All fields are required");
+    if (!email || !password) {
+      return toast.error("All fields are required");
     }
     if (!validateEmail(email)) {
       return toast.error("Please enter a valid email");
