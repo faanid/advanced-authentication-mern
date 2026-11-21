@@ -31,7 +31,7 @@ const buildFrontendUrl = (path) => {
     throw new Error("FRONTEND_URL must be configured");
   }
 
-  return process.env.FRONTEND_URL.replace(/\\/+$/, "") + path;
+  return process.env.FRONTEND_URL.replace(/\/+$/, "") + path;
 };
 
 const clearAuthCookie = (res) => {
