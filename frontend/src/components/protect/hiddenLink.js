@@ -22,11 +22,11 @@ export const ShowOnLogout = ({ children }) => {
   return null;
 };
 
-export const AdminAuthorLink = ({ children }) => {
+export const AdminOnlyLink = ({ children }) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
   const user = useSelector(selectUser);
 
-  if (isLoggedIn && (user?.role === "admin" || user?.role === "author")) {
+  if (isLoggedIn && user?.role === "admin") {
     return <>{children}</>;
   }
   return null;
