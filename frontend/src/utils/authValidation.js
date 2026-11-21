@@ -7,3 +7,8 @@ export const sanitizeLoginCode = (value) =>
   String(value ?? "").replace(/\D/g, "").slice(0, 6);
 
 export const isValidLoginCode = (value) => /^[0-9]{6}$/.test(String(value ?? ""));
+
+export const validatePassword = (password) =>
+  typeof password === "string" &&
+  password.length >= 8 &&
+  new TextEncoder().encode(password).length <= 72;
