@@ -27,8 +27,8 @@ const {
 } = require("../controllers/userController");
 
 router.post("/register", registerUser);
-router.get("/login", loginUser);
-router.get("logout", logoutUser);
+router.post("/login", loginUser);
+router.post("/logout", logoutUser);
 router.get("/getUser", protect, getUser);
 router.patch("/updateUser", protect, updateUser);
 
@@ -36,10 +36,10 @@ router.delete("/:id", protect, adminOnly, deleteUser);
 router.get("/getUsers", protect, authorOnly, getUsers);
 router.get("/loginStatus", loginStatus);
 router.post("/upgradeUser", protect, adminOnly, upgradeUser);
-router.post("sendAutomatedEmail", protect, sendAutomatedEmail);
+router.post("/sendAutomatedEmail", protect, adminOnly, sendAutomatedEmail);
 
 router.post("/sendVerificationEmail", protect, sendVerificationEmail);
-router.patch("/verifyToken:verificationToken", verifyToken);
+router.patch("/verifyToken/:verificationToken", verifyToken);
 router.post("/forgotPassword", forgotPassword);
 router.patch("/resetPassword/:resetToken", resetPassword);
 router.patch("/changePassword", protect, changePassword);
