@@ -617,7 +617,7 @@ const authSlice = createSlice({
         state.isLoggedIn = true;
         state.twoFactor = false;
         state.user = action.payload;
-        toast.success(action.payload);
+        toast.success("Login successful");
       })
       .addCase(loginWithCode.rejected, (state, action) => {
         state.isLoading = false;
