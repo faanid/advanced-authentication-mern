@@ -58,7 +58,7 @@ const Login = () => {
       dispatch(RESET());
       dispatch(sendLoginCode(email))
         .unwrap()
-        .then(() => navigate(`/loginWithCode/${encodeURIComponent(email)}`))
+        .then(() => navigate("/loginWithCode", { state: { email } }))
         .catch(() => {});
       return;
     }
