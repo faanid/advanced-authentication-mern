@@ -1,12 +1,12 @@
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 
-const generateToken = (id) => {
+const generateToken = (id, tokenVersion = 0) => {
   if (!process.env.JWT_SECRET) {
     throw new Error("JWT_SECRET must be configured");
   }
 
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
+  return jwt.sign({ id, tokenVersion }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "1d",
   });
 };

@@ -47,7 +47,7 @@ const Reset = () => {
     await dispatch(resetPassword({ userData, resetToken }));
   };
   useEffect(() => {
-    if (isSuccess && message.includes("Reset Successful")) {
+    if (isSuccess && message.toLowerCase().includes("password reset successful")) {
       navigate("/login");
     }
 

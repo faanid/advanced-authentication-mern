@@ -48,6 +48,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     userAgent: {
       type: [String],
       default: [],
