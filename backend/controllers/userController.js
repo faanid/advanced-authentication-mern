@@ -11,6 +11,9 @@ const { OAuth2Client } = require("google-auth-library");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const hashLoginCode = (code) =>
+  crypto.createHmac("sha256", process.env.JWT_SECRET).update(code).digest("hex");
+
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
@@ -179,7 +182,7 @@ const sendLoginCode = asyncHandler(async (req, res) => {
   const loginToken = await Token.create({
     userId: user._id,
     purpose: "login_otp",
-    loginToken: hashToken(loginCode),
+    loginToken: hashLoginCode(loginCode),
     attempts: 0,
     createdAt: new Date(),
     expiresAt,
@@ -258,7 +261,7 @@ const loginWithCode = asyncHandler(async (req, res) => {
   }
 
   const expectedHash = Buffer.from(userToken.loginToken, "hex");
-  const receivedHash = Buffer.from(hashToken(loginCode), "hex");
+  const receivedHash = Buffer.from(hashLoginCode(loginCode), "hex");
   const isCodeValid =
     expectedHash.length === receivedHash.length &&
     crypto.timingSafeEqual(expectedHash, receivedHash);
