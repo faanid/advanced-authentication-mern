@@ -26,6 +26,14 @@ const setAuthCookie = (res, token) => {
   });
 };
 
+const buildFrontendUrl = (path) => {
+  if (!process.env.FRONTEND_URL) {
+    throw new Error("FRONTEND_URL must be configured");
+  }
+
+  return process.env.FRONTEND_URL.replace(/\\/+$/, "") + path;
+};
+
 const clearAuthCookie = (res) => {
   const isProduction = process.env.NODE_ENV === "production";
 
