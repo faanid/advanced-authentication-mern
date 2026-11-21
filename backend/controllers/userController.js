@@ -15,7 +15,15 @@ const hashLoginCode = (code) =>
   crypto.createHmac("sha256", process.env.JWT_SECRET).update(code).digest("hex");
 
 const setAuthCookie = (res, token) => {
-  setAuthCookie(res, token);
+  const isProduction = process.env.NODE_ENV === "production";
+
+  res.cookie("token", token, {
+    path: "/",
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
+  });
 };
 
 const clearAuthCookie = (res) => {
@@ -299,15 +307,7 @@ const loginWithCode = asyncHandler(async (req, res) => {
   await user.save();
 
   const token = generateToken(user._id);
-  const isProduction = process.env.NODE_ENV === "production";
-
-  res.cookie("token", token, {
-    path: "/",
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: isProduction ? "none" : "lax",
-    secure: isProduction,
-  });
+  setAuthCookie(res, token);
 
   const { _id, name, phone, bio, photo, role, isVerified } = user;
 
