@@ -1,9 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { BiLogIn } from "react-icons/bi";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
-import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { AiOutlineMail } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { forgotPassword, RESET } from "../../redux/features/auth/authSlice";
@@ -20,7 +18,7 @@ const Forgot = () => {
     e.preventDefault();
 
     if (!email) {
-      toast.error("Please enter an email");
+      return toast.error("Please enter an email");
     }
     if (!validateEmail(email)) {
       return toast.error("Please enter a valid email");
@@ -41,7 +39,7 @@ const Forgot = () => {
           <div className="--flex-center">
             <AiOutlineMail size={35} color="#999" />
           </div>
-          <h2>ّForgot Password</h2>
+          <h2>Forgot Password</h2>
 
           <form onSubmit={forgot}>
             <input
