@@ -1,5 +1,5 @@
 import React from "react";
-import styles from "./Card.modules.scss";
+import styles from "./Card.module.scss";
 
 const Card = ({ children, cardClass }) => {
   return <div className={`${styles.card} ${cardClass}}`}>{children}</div>;
