@@ -4,7 +4,6 @@ import { MdPassword } from "react-icons/md";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
-import { AiOutlineMail } from "react-icons/ai";
 import Loader from "../../components/Loader/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -21,7 +20,7 @@ const Reset = () => {
   const { resetToken } = useParams();
   // console.log(resetToken);
 
-  const { isLoading, isLoggedIn, isSuccess, message } = useSelector(
+  const { isLoading, isSuccess, message } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
