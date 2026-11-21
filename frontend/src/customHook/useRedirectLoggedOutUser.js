@@ -10,10 +10,9 @@ const useRedirectLoggedOutUSer = (path) => {
     let isLoggedIn;
     const redirectLoggedOutUser = async () => {
       try {
-        //make a req to backend
         isLoggedIn = await authService.getLoginStatus();
       } catch (error) {
-        console.log(error.message);
+
       }
 
       if (!isLoggedIn) {
