@@ -41,20 +41,20 @@ const clearAuthCookie = (res) => {
 // Register User
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const normalizedName = String(name || "").trim();
 
-  // Validation
-  if (!name || !email || !password) {
+  if (!normalizedName || !normalizedEmail || !password) {
     res.status(400);
-    throw new Error("Please fill in al the required fields.");
+    throw new Error("Name, email, and password are required");
   }
 
   if (password.length < 6) {
     res.status(400);
-    throw new Error("Password must be up to 6 characters.");
+    throw new Error("Password must be at least 6 characters");
   }
 
-  // Check If User Exists
-  const userExists = await User.findOne({ email });
+  const userExists = await User.findOne({ email: normalizedEmail });
 
   if (userExists) {
     res.status(400);
@@ -66,8 +66,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
   // Create New User
   const user = await User.create({
-    name,
-    email,
+    name: normalizedName,
+    email: normalizedEmail,
     password,
     userAgent,
   });
@@ -108,17 +108,18 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error("Please add email and password");
   }
 
-  const user = await User.findOne({ email });
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
 
   if (!user) {
-    res.status(400);
-    throw new Error("User not found, please signup");
+    res.status(401);
+    throw new Error("Invalid email or password");
   }
 
   const passwordIsCorrect = await bcrypt.compare(password, user.password);
 
   if (!passwordIsCorrect) {
-    res.status(400);
+    res.status(401);
     throw new Error("Invalid email or password");
   }
 
