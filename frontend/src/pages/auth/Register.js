@@ -56,25 +56,21 @@ const Register = () => {
   };
 
   useEffect(() => {
-    //check Lower and Uppercase
     if (password.match(/([a-z].*[A-Z])|([A-Z].*[a-z])/)) {
       setUCase(true);
     } else {
       setUCase(false);
     }
-    // Check For Numbers
     if (password.match(/([0-9])/)) {
       setNum(true);
     } else {
       setNum(false);
     }
-    // Check For Special char
     if (password.match(/([!,%,&,@,#,$,^,*,?,_,~])/)) {
       setSChar(true);
     } else {
       setSChar(false);
     }
-    // Check For PASSWORD LENGTH
     if (password.length > 5) {
       setPassLength(true);
     } else {
@@ -99,7 +95,6 @@ const Register = () => {
     }
 
     const userData = { name, email, password };
-    // console.log(userData);
     const result = await dispatch(register(userData));
     if (register.fulfilled.match(result)) {
       await dispatch(sendVerificationEmail());
@@ -107,7 +102,6 @@ const Register = () => {
   };
 
   useEffect(() => {
-    //some conditions that i wanna to check
     if (isSuccess && isLoggedIn) {
       navigate("/profile");
     }
@@ -160,7 +154,7 @@ const Register = () => {
                 return false;
               }}
             />
-            {/* Password Strength */}
+            
             <Card cardClass={styles.group}>
               <ul className="form-list">
                 <li>
