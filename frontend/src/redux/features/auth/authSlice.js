@@ -280,9 +280,9 @@ export const sendLoginCode = createAsyncThunk(
 //login with code
 export const loginWithCode = createAsyncThunk(
   "auth/loginWithCode",
-  async (code, email, thunkAPI) => {
+  async ({ loginCode, email }, thunkAPI) => {
     try {
-      return await authService.loginWithCode(code, email);
+      return await authService.loginWithCode({ loginCode, email });
     } catch (error) {
       const message =
         (error.response &&
@@ -394,7 +394,7 @@ const authSlice = createSlice({
         state.isError = true;
         state.user = null;
         toast.error(action.payload);
-        if (action.payload.includes("New browser")) {
+        if (String(action.payload || "").includes("New browser")) {
           //this string from userController.js -line-138- error message
           state.twoFactor = true;
         }
@@ -617,7 +617,7 @@ const authSlice = createSlice({
         state.isLoggedIn = true;
         state.twoFactor = false;
         state.user = action.payload;
-        toast.success(action.payload);
+        toast.success("Login successful");
       })
       .addCase(loginWithCode.rejected, (state, action) => {
         state.isLoading = false;

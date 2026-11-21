@@ -95,12 +95,15 @@ const upgradeUser = async (userData) => {
 
 // Send Login Code
 const sendLoginCode = async (email) => {
-  const response = await axios.post(API_URL + `sendLoginCode/${email}`);
+  const response = await axios.post(API_URL + `sendLoginCode/${encodeURIComponent(email)}`);
   return response.data.message;
 };
 // Login With Code
-const loginWithCode = async (code, email) => {
-  const response = await axios.post(API_URL + `loginWithCode/${email}`, code);
+const loginWithCode = async ({ loginCode, email }) => {
+  const response = await axios.post(
+    API_URL + `loginWithCode/${encodeURIComponent(email)}`,
+    { loginCode }
+  );
 
   return response.data;
 };
