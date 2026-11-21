@@ -71,6 +71,7 @@ Create a `.env` file inside `backend/` and configure the variables required by t
 | `EMAIL_PASS` | SMTP password |
 | `FRONTEND_URL` | Public frontend origin, used to create email links and as the default CORS origin |
 | `CORS_ORIGINS` | Optional comma-separated list of allowed frontend origins |
+| `TRUST_PROXY` | Set to `true` only when the API is behind one trusted reverse proxy |
 | `EMAIL_PORT` | Optional SMTP port; defaults to `587` |
 | `EMAIL_REPLY_TO` | Optional reply-to email address; defaults to `EMAIL_USER` |
 
@@ -132,7 +133,8 @@ Use `npm ci` instead of `npm install` when installing from a committed lockfile 
 - Keep JWT, OAuth, SMTP, encryption, and database secrets outside source control.
 - Do not expose password hashes, reset tokens, verification tokens, or device codes in API responses or logs.
 - Apply server-side authorization and input validation to every protected operation; frontend route guards are not security boundaries.
-- Configure rate limits for authentication, verification, and password-reset endpoints before deployment.
+- Authentication, OTP, verification, and password-reset endpoints have per-IP rate limits; OTP and email flows also enforce per-account cooldowns.
+- The default rate-limit store is in-memory and is suitable for a single application instance. Use a shared store such as Redis before running multiple API instances.
 - Review [SECURITY.md](SECURITY.md) for vulnerability reporting instructions.
 
 ## Project status
