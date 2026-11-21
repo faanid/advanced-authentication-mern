@@ -44,7 +44,6 @@ function Profile() {
   const [imagePreview, setImagePreview] = useState(null);
 
   useEffect(() => {
-    //whenever the page load, it will just get the user
     dispatch(getUser());
   }, [dispatch]);
 
@@ -102,7 +101,6 @@ function Profile() {
 
         imageURL = imgData.secure_url;
       }
-      // Save profile to MongoD
       const userData = {
         name: profile.name,
         phone: profile.phone,
