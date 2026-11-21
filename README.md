@@ -48,7 +48,8 @@ The repository is being actively repaired and refactored. Some authentication fl
 
 ## Prerequisites
 
-- Node.js and npm versions compatible with the dependencies in each package.
+- Node.js 22 or newer for the backend.
+- The frontend still uses legacy `node-sass`; its CI currently uses Node.js 16 until the Sass toolchain is modernized.
 - A MongoDB database, local or hosted.
 - Google OAuth credentials if Google sign-in is enabled.
 - SMTP credentials if email-based flows are enabled.
