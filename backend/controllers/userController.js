@@ -485,8 +485,13 @@ const loginStatus = asyncHandler(async (req, res) => {
   }
 
   try {
-    jwt.verify(token, process.env.JWT_SECRET);
-    return res.status(200).json(true);
+    const verified = jwt.verify(token, process.env.JWT_SECRET);
+    const userExists = await User.exists({
+      _id: verified.id,
+      role: { $ne: "suspended" },
+    });
+
+    return res.status(200).json(Boolean(userExists));
   } catch (error) {
     if (
       ["JsonWebTokenError", "TokenExpiredError", "NotBeforeError"].includes(
@@ -553,7 +558,7 @@ const sendAutomatedEmail = asyncHandler(async (req, res) => {
     process.env.EMAIL_REPLY_TO || process.env.EMAIL_USER,
     "changeRole",
     user.name,
-    `${process.env.FRONTEND_URL.replace(/\\/$/, "")}/login`
+    `${process.env.FRONTEND_URL.replace(/\/+$/, "")}/login`
   );
 
   return res.status(200).json({ message: "Role notification email sent" });
@@ -680,85 +685,54 @@ const changePassword = asyncHandler(async (req, res) => {
 // Login with Google
 const loginWithGoogle = asyncHandler(async (req, res) => {
   const { userToken } = req.body;
-  //console.log(userToken);
+
+  if (!userToken || !process.env.GOOGLE_CLIENT_ID) {
+    res.status(400);
+    throw new Error("Google credential is required");
+  }
 
   const ticket = await client.verifyIdToken({
     idToken: userToken,
     audience: process.env.GOOGLE_CLIENT_ID,
   });
   const payload = ticket.getPayload();
-  // console.log(payload);
-  const { name, email, picture, sub } = payload;
-  const password = Date.now() + sub;
 
-  // Get UserAgent
-  const userAgent = [req.get("user-agent") || "unknown"];
+  if (!payload?.email || payload.email_verified !== true) {
+    res.status(401);
+    throw new Error("Google account email must be verified");
+  }
 
-  // Check if user exists
-  const user = await User.findOne({ email });
+  const email = payload.email.toLowerCase();
+  const userAgent = req.get("user-agent") || "unknown";
+  let user = await User.findOne({ email });
 
   if (!user) {
-    // Create New User
-    const newUser = await User.create({
-      name,
+    user = await User.create({
+      name: payload.name || email.split("@")[0],
       email,
-      password,
-      photo: picture,
+      password: crypto.randomBytes(32).toString("hex"),
+      photo: payload.picture,
       isVerified: true,
-      userAgent,
+      userAgent: [userAgent],
     });
-
-    if (newUser) {
-      //Generate Token
-      const token = generateToken(newUser._id);
-
-      //Send HTTP-only cookie
-      setAuthCookie(res, token);
-
-      const { _id, name, email, phone, bio, photo, role, isVerified } = newUser;
-
-      res.status(201).json({
-        _id,
-        name,
-        email,
-        phone,
-        bio,
-        photo,
-        role,
-        isVerified,
-        token,
-      });
-    }
+  } else if (user.role === "suspended") {
+    res.status(403);
+    throw new Error("User suspended, please contact support");
   }
 
-  // User exists, then login
-  if (user) {
-    //Generate Token
-    const token = generateToken(user._id);
+  const token = generateToken(user._id);
+  setAuthCookie(res, token);
 
-    //Send HTTP-only cookie
-    res.cookie("token", token, {
-      path: "/",
-      httpOnly: true,
-      expires: new Date(Date.now() + 1000 * 86400), //1 day
-      sameSite: "none",
-      secure: true,
-    });
-
-    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
-
-    res.status(201).json({
-      _id,
-      name,
-      email,
-      phone,
-      bio,
-      photo,
-      role,
-      isVerified,
-      token,
-    });
-  }
+  return res.status(200).json({
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    phone: user.phone,
+    bio: user.bio,
+    photo: user.photo,
+    role: user.role,
+    isVerified: user.isVerified,
+  });
 });
 
 module.exports = {
