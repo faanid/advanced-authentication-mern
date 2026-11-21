@@ -23,11 +23,12 @@ const configuredOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL 
   .map((origin) => normalizeOrigin(origin.trim()))
   .filter(Boolean);
 
-const allowedOrigins = new Set([
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  ...configuredOrigins,
-]);
+const developmentOrigins =
+  process.env.NODE_ENV === "production"
+    ? []
+    : ["http://localhost:3000", "http://127.0.0.1:3000"];
+
+const allowedOrigins = new Set([...developmentOrigins, ...configuredOrigins]);
 
 app.disable("x-powered-by");
 app.set("trust proxy", process.env.TRUST_PROXY === "true" ? 1 : false);
