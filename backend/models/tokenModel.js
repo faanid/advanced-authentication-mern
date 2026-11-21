@@ -5,7 +5,6 @@ const tokenSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     required: true,
     ref: "User",
-    index: true,
   },
   purpose: {
     type: String,
@@ -40,7 +39,7 @@ const tokenSchema = new mongoose.Schema({
   },
 });
 
-tokenSchema.index({ userId: 1, purpose: 1 });
+tokenSchema.index({ userId: 1, purpose: 1 }, { unique: true });
 tokenSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 const Token = mongoose.model("Token", tokenSchema);
