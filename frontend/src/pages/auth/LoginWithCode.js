@@ -3,8 +3,6 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { GrInsecure } from "react-icons/gr";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
-import PasswordInput from "../../components/passwordInput/PasswordInput";
-import { AiOutlineMail } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import {
@@ -39,11 +37,7 @@ const LoginWithCode = () => {
       return toast.error("Access code must be 6 characters");
     }
 
-    const code = {
-      loginCode,
-    };
-
-    await dispatch(loginWithCode({ code, email }));
+    await dispatch(loginWithCode({ loginCode, email }));
   };
 
   useEffect(() => {
