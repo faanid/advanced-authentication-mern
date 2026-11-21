@@ -22,6 +22,7 @@ function UserList() {
   useRedirectLoggedOutUSer("/login");
 
   const [search, setSearch] = useState("");
+  const [itemOffset, setItemOffset] = useState(0);
   const dispatch = useDispatch();
 
   const { users, isLoading } = useSelector(
@@ -64,8 +65,6 @@ function UserList() {
   }, [dispatch, users, search]);
 
   const itemsPerPage = 5;
-  const [itemOffset, setItemOffset] = useState(0);
-
   const endOffset = itemOffset + itemsPerPage;
   const currentItems = filteredUsers.slice(itemOffset, endOffset);
   const pageCount = Math.ceil(filteredUsers.length / itemsPerPage);
@@ -74,7 +73,6 @@ function UserList() {
     const newOffset = event.selected * itemsPerPage;
     setItemOffset(newOffset);
   };
-
 
   return (
     <section>
@@ -117,7 +115,7 @@ function UserList() {
                       const { _id, name, email, role } = user;
                       return (
                         <tr key={_id}>
-                          <td>{index + 1}</td>
+                          <td>{itemOffset + index + 1}</td>
                           <td>{shortenText(name, 8)}</td>
                           <td>{email}</td>
                           <td>{role}</td>
@@ -126,11 +124,14 @@ function UserList() {
                           </td>
                           <td>
                             <span>
-                              <FaTrashAlt
-                                size={20}
-                                color="red"
+                              <button
+                                type="button"
+                                className="--btn --btn-danger"
+                                aria-label={`Delete ${name}`}
                                 onClick={() => confirmDelete(_id)}
-                              />
+                              >
+                                <FaTrashAlt size={18} />
+                              </button>
                             </span>
                           </td>
                         </tr>
