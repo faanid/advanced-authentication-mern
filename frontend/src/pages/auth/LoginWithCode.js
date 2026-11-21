@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { GrInsecure } from "react-icons/gr";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
@@ -14,7 +14,8 @@ import Loader from "../../components/Loader/Loader";
 
 const LoginWithCode = () => {
   const [loginCode, setLoginCode] = useState("");
-  const { email } = useParams();
+  const location = useLocation();
+  const email = location.state?.email || "";
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -23,8 +24,11 @@ const LoginWithCode = () => {
   );
 
   const sendUserLoginCode = async () => {
-    await dispatch(sendLoginCode(email));
-    await dispatch(RESET());
+    try {
+      await dispatch(sendLoginCode(email)).unwrap();
+    } catch (error) {
+      return;
+    }
   };
 
   const loginUserWithCode = async (e) => {
@@ -41,13 +45,17 @@ const LoginWithCode = () => {
   };
 
   useEffect(() => {
-    //some conditions that i wanna to check
+    if (!email) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
     if (isSuccess && isLoggedIn) {
       navigate("/profile");
     }
 
     dispatch(RESET());
-  }, [isLoggedIn, isSuccess, dispatch, navigate]);
+  }, [email, isLoggedIn, isSuccess, dispatch, navigate]);
 
   return (
     <div className={`container ${styles.auth}`}>
@@ -69,7 +77,7 @@ const LoginWithCode = () => {
               required
               name="accessCode"
               value={loginCode}
-              onChange={(e) => setLoginCode(e.target.value)}
+              onChange={(e) => setLoginCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             />
 
             <button type="submit" className="--btn --btn-primary --btn-block">

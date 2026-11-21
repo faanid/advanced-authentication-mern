@@ -15,7 +15,6 @@ const initialState = {
   suspendedUsers: 0,
 };
 
-// Register User
 export const register = createAsyncThunk(
   "auth/register",
   async (userData, thunkAPI) => {
@@ -34,7 +33,6 @@ export const register = createAsyncThunk(
   }
 );
 
-// Login User
 export const login = createAsyncThunk(
   "auth/login",
   async (userData, thunkAPI) => {
@@ -53,7 +51,6 @@ export const login = createAsyncThunk(
   }
 );
 
-// Logout User
 export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   try {
     return await authService.logout();
@@ -67,11 +64,9 @@ export const logout = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
   }
 });
 
-// Get Login Status
 export const getLoginStatus = createAsyncThunk(
   "auth/getLoginStatus",
   async (_, thunkAPI) => {
-    // _  means : we not sending any data to the backend
     try {
       return await authService.getLoginStatus();
     } catch (error) {
@@ -87,7 +82,6 @@ export const getLoginStatus = createAsyncThunk(
   }
 );
 
-// Get User
 export const getUser = createAsyncThunk("auth/getUser", async (_, thunkAPI) => {
   try {
     return await authService.getUser();
@@ -101,7 +95,6 @@ export const getUser = createAsyncThunk("auth/getUser", async (_, thunkAPI) => {
   }
 });
 
-// Update User
 export const updateUser = createAsyncThunk(
   "auth/updateUser",
   async (userData, thunkAPI) => {
@@ -120,7 +113,6 @@ export const updateUser = createAsyncThunk(
   }
 );
 
-// Send Verification Email
 export const sendVerificationEmail = createAsyncThunk(
   "auth/sendVerificationEmail",
   async (_, thunkAPI) => {
@@ -139,7 +131,6 @@ export const sendVerificationEmail = createAsyncThunk(
   }
 );
 
-// Verify User
 export const verifyUser = createAsyncThunk(
   "auth/verifyUser",
   async (verificationToken, thunkAPI) => {
@@ -156,7 +147,6 @@ export const verifyUser = createAsyncThunk(
     }
   }
 );
-// Change password
 export const changePassword = createAsyncThunk(
   "auth/changePassword",
   async (userData, thunkAPI) => {
@@ -173,7 +163,6 @@ export const changePassword = createAsyncThunk(
     }
   }
 );
-// Forgot password
 export const forgotPassword = createAsyncThunk(
   "auth/forgotPassword",
   async (userData, thunkAPI) => {
@@ -190,7 +179,6 @@ export const forgotPassword = createAsyncThunk(
     }
   }
 );
-// Reset password
 export const resetPassword = createAsyncThunk(
   "auth/resetPassword",
   async ({ userData, resetToken }, thunkAPI) => {
@@ -207,7 +195,6 @@ export const resetPassword = createAsyncThunk(
     }
   }
 );
-// Get Users
 export const getUsers = createAsyncThunk(
   "auth/getUsers",
   async (_, thunkAPI) => {
@@ -224,7 +211,6 @@ export const getUsers = createAsyncThunk(
     }
   }
 );
-// deleteUsers
 export const deleteUsers = createAsyncThunk(
   "auth/deleteUsers",
   async (id, thunkAPI) => {
@@ -241,7 +227,6 @@ export const deleteUsers = createAsyncThunk(
     }
   }
 );
-// upgradeUser
 export const upgradeUser = createAsyncThunk(
   "auth/upgradeUser",
   async (userData, thunkAPI) => {
@@ -259,7 +244,6 @@ export const upgradeUser = createAsyncThunk(
   }
 );
 
-// send login code
 export const sendLoginCode = createAsyncThunk(
   "auth/sendLoginCode",
   async (email, thunkAPI) => {
@@ -276,7 +260,6 @@ export const sendLoginCode = createAsyncThunk(
     }
   }
 );
-//login with code
 export const loginWithCode = createAsyncThunk(
   "auth/loginWithCode",
   async ({ loginCode, email }, thunkAPI) => {
@@ -294,7 +277,6 @@ export const loginWithCode = createAsyncThunk(
   }
 );
 
-//login with google
 export const loginWithGoogle = createAsyncThunk(
   "auth/loginWithGoogle",
   async (userToken, thunkAPI) => {
@@ -354,7 +336,6 @@ const authSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      //Register User
       .addCase(register.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -363,9 +344,7 @@ const authSlice = createSlice({
         state.isLoggedIn = true;
         state.isSuccess = true;
         state.user = action.payload;
-        console.log(action.payload);
         toast.success("Registration successful");
-        console.log(action.payload);
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
@@ -374,7 +353,6 @@ const authSlice = createSlice({
         state.user = null;
         toast.error(action.payload);
       })
-      //Login User
       .addCase(login.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -383,9 +361,7 @@ const authSlice = createSlice({
         state.isLoggedIn = true;
         state.isSuccess = true;
         state.user = action.payload;
-        console.log(action.payload);
         toast.success("Login successful");
-        console.log(action.payload);
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -394,11 +370,9 @@ const authSlice = createSlice({
         state.user = null;
         toast.error(action.payload);
         if (String(action.payload || "").includes("New browser")) {
-          //this string from userController.js -line-138- error message
           state.twoFactor = true;
         }
       })
-      //Logout User
       .addCase(logout.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -407,7 +381,6 @@ const authSlice = createSlice({
         state.isLoggedIn = false;
         state.isSuccess = true;
         state.user = null;
-        console.log(action.payload);
         toast.success(action.payload);
       })
       .addCase(logout.rejected, (state, action) => {
@@ -416,13 +389,12 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      // Get Login Status
       .addCase(getLoginStatus.pending, (state, action) => {
         state.isLoading = true;
       })
       .addCase(getLoginStatus.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.isLoggedIn = action.payload; //you can set it to 'True' but we want getting from 'backend'
+        state.isLoggedIn = action.payload;
         state.isSuccess = true;
       })
       .addCase(getLoginStatus.rejected, (state, action) => {
@@ -430,7 +402,6 @@ const authSlice = createSlice({
         state.message = action.payload;
         state.isError = true;
       })
-      // Get User
       .addCase(getUser.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -446,7 +417,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      // Update User
       .addCase(updateUser.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -463,7 +433,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      // Send Verification Email
       .addCase(sendVerificationEmail.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -479,7 +448,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      // Verify User
       .addCase(verifyUser.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -495,7 +463,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      // Change Password
       .addCase(changePassword.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -511,7 +478,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      // Forgot Password
       .addCase(forgotPassword.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -527,7 +493,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      // Reset Password
       .addCase(resetPassword.pending, (state, action) => {
         state.isLoading = true;
       })
@@ -543,7 +508,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      // getUsers
       .addCase(getUsers.pending, (state) => {
         state.isLoading = true;
       })
@@ -558,7 +522,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      //deleteUsers
       .addCase(deleteUsers.pending, (state) => {
         state.isLoading = true;
       })
@@ -574,7 +537,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      //upgradeUser
       .addCase(upgradeUser.pending, (state) => {
         state.isLoading = true;
       })
@@ -590,7 +552,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      //send login code
       .addCase(sendLoginCode.pending, (state) => {
         state.isLoading = true;
       })
@@ -606,7 +567,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      //login with code
       .addCase(loginWithCode.pending, (state) => {
         state.isLoading = true;
       })
@@ -625,7 +585,6 @@ const authSlice = createSlice({
         state.user = null;
         toast.error(action.payload);
       })
-      //login with google
       .addCase(loginWithGoogle.pending, (state) => {
         state.isLoading = true;
       })

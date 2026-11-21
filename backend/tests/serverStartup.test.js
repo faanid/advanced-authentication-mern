@@ -20,4 +20,6 @@ test("Express application loads with its user routes registered", () => {
   assert.ok(routePaths.includes("/loginStatus"));
   assert.ok(routePaths.includes("/updateUser"));
   assert.ok(routePaths.includes("/getUsers"));
+  assert.ok(routePaths.includes("/sendLoginCode"));
+  assert.ok(routePaths.includes("/loginWithCode"));
 });

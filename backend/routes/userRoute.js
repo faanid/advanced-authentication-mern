@@ -47,8 +47,8 @@ router.post("/forgotPassword", passwordResetLimiter, forgotPassword);
 router.patch("/resetPassword/:resetToken", resetPassword);
 router.patch("/changePassword", protect, changePassword);
 
-router.post("/sendLoginCode/:email", otpLimiter, sendLoginCode);
-router.post("/loginWithCode/:email", otpLimiter, loginWithCode);
+router.post("/sendLoginCode", otpLimiter, sendLoginCode);
+router.post("/loginWithCode", otpLimiter, loginWithCode);
 
 router.post("/google/callback", loginLimiter, loginWithGoogle);
 
