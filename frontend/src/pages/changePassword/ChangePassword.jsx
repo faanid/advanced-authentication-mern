@@ -43,8 +43,8 @@ const ChangePassword = () => {
       return toast.error("All fields are required");
     }
 
-    if (password.length < 6) {
-      return toast.error("Password must be at least 6 characters");
+    if (!validatePassword(password)) {
+      return toast.error("Use at least 8 characters and stay within the 72-byte password limit");
     }
 
     if (password !== password2) {
@@ -87,6 +87,7 @@ const ChangePassword = () => {
                       name="oldPassword"
                       value={oldPassword}
                       onChange={handleInputChange}
+                      maxLength={72}
                     />
                   </p>
                   <p>
@@ -96,6 +97,8 @@ const ChangePassword = () => {
                       name="password"
                       value={password}
                       onChange={handleInputChange}
+                      minLength={8}
+                      maxLength={72}
                     />
                   </p>
                   <p>
@@ -105,6 +108,8 @@ const ChangePassword = () => {
                       name="password2"
                       value={password2}
                       onChange={handleInputChange}
+                      minLength={8}
+                      maxLength={72}
                     />
                   </p>
 
