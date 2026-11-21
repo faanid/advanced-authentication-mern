@@ -488,8 +488,8 @@ const forgotPassword = asyncHandler(async (req, res) => {
     );
   } catch (error) {
     await Token.deleteOne({ _id: tokenRecord._id });
-    res.status(502);
-    throw new Error("Unable to send the password reset email");
+    console.error("Password reset email delivery failed:", error.message);
+    return res.status(200).json({ message: genericMessage });
   }
 
   return res.status(200).json({ message: genericMessage });
