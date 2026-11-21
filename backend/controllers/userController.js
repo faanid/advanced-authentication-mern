@@ -220,7 +220,7 @@ const loginWithCode = asyncHandler(async (req, res) => {
   const email = String(req.params.email || "").trim().toLowerCase();
   const loginCode = String(req.body.loginCode || "").trim();
 
-  if (!/^\\d{6}$/.test(loginCode)) {
+  if (!/^[0-9]{6}$/.test(loginCode)) {
     res.status(400);
     throw new Error("A valid six-digit login code is required");
   }
