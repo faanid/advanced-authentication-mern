@@ -62,6 +62,9 @@ const LoginWithCode = () => {
           <form onSubmit={loginUserWithCode}>
             <input
               type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
               placeholder="Access Code"
               required
               name="accessCode"
