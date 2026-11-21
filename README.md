@@ -142,7 +142,7 @@ Use `npm ci` instead of `npm install` when installing from a committed lockfile 
 
 ## Project status
 
-This is a learning and portfolio project undergoing a staged refactor. The data model, backend dependencies, authentication and token lifecycle, API contracts, authorization, email handling, and core frontend flows have been repaired in focused pull requests. Backend startup/unit checks and frontend install/test/build workflows run in GitHub Actions. Database-backed integration tests remain outstanding. The frontend Vite migration and non-breaking dependency remediation are being validated in a dedicated pull request.
+This is a learning and portfolio project undergoing a staged refactor. The data model, backend dependencies, authentication and token lifecycle, API contracts, authorization, email handling, and core frontend flows have been repaired in focused pull requests. Backend startup/unit checks and frontend install/test/build workflows run in GitHub Actions. Frontend Vite migration and non-breaking dependency remediation are complete, with zero reported frontend npm vulnerabilities. MongoDB-backed account/session integration tests now run in backend CI; SMTP delivery and full OAuth provider integration still require dedicated external-service tests.
 
 Do not deploy the current `main` branch as a production authentication service until the security fixes, integration tests, and deployment configuration have been completed.
 
