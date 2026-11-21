@@ -35,6 +35,12 @@ jobs:
         working-directory: backend
         run: npm ci
 
+      - name: Summarize backend dependency audit
+        working-directory: backend
+        run: |
+          npm audit --json > audit-report.json || true
+          node -e 'const report = require("./audit-report.json"); for (const [name, issue] of Object.entries(report.vulnerabilities || {})) console.log(JSON.stringify({ name, severity: issue.severity, direct: issue.isDirect, range: issue.range, fixAvailable: issue.fixAvailable, via: issue.via.map(item => typeof item === "string" ? item : item.title) }));'
+
       - name: Check JavaScript syntax
         run: find backend -path backend/node_modules -prune -o -type f -name "*.js" -print0 | xargs -0 -n 1 node --check
 
