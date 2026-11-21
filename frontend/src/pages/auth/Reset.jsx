@@ -8,6 +8,7 @@ import Loader from "../../components/Loader/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { RESET, resetPassword } from "../../redux/features/auth/authSlice";
+import { validatePassword } from "../../utils/authValidation";
 
 const initialState = {
   password: "",
@@ -32,8 +33,8 @@ const Reset = () => {
 
   const reset = async (e) => {
     e.preventDefault();
-    if (password.length < 6) {
-      return toast.error("Password must be at least 6 characters");
+    if (!validatePassword(password)) {
+      return toast.error("Use at least 8 characters and stay within the 72-byte password limit");
     }
 
     if (password !== password2) {
@@ -69,12 +70,16 @@ const Reset = () => {
               name="password"
               value={password}
               onChange={handleInputChange}
+              minLength={8}
+              maxLength={72}
             />
             <PasswordInput
               placeholder="Confirm Password"
               name="password2"
               value={password2}
               onChange={handleInputChange}
+              minLength={8}
+              maxLength={72}
             />
 
             <button type="submit" className="--btn --btn-primary --btn-block">
