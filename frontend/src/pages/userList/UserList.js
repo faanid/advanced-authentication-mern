@@ -34,8 +34,12 @@ function UserList() {
   }, [dispatch]);
 
   const removeUser = async (id) => {
-    await dispatch(deleteUsers(id));
-    dispatch(getUsers());
+    try {
+      await dispatch(deleteUsers(id)).unwrap();
+      await dispatch(getUsers()).unwrap();
+    } catch (error) {
+      return;
+    }
   };
 
   const confirmDelete = (id) => {
@@ -49,7 +53,6 @@ function UserList() {
         },
         {
           label: "Cancel",
-          // onClick: () => alert("Click No"),
         },
       ],
     });
@@ -57,9 +60,9 @@ function UserList() {
 
   useEffect(() => {
     dispatch(FILTER_USERS({ users, search }));
+    setItemOffset(0);
   }, [dispatch, users, search]);
 
-  //Begin Pagination
   const itemsPerPage = 5;
   const [itemOffset, setItemOffset] = useState(0);
 
@@ -67,13 +70,11 @@ function UserList() {
   const currentItems = filteredUsers.slice(itemOffset, endOffset);
   const pageCount = Math.ceil(filteredUsers.length / itemsPerPage);
 
-  // Invoke when user click to request another page.
   const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % filteredUsers.length;
+    const newOffset = event.selected * itemsPerPage;
     setItemOffset(newOffset);
   };
 
-  //End Pagination
 
   return (
     <section>
@@ -95,7 +96,7 @@ function UserList() {
                 />
               </span>
             </div>
-            {/* Table */}
+            
             {!isLoading && users.length === 0 ? (
               <p>No user found...</p>
             ) : (
@@ -121,7 +122,7 @@ function UserList() {
                           <td>{email}</td>
                           <td>{role}</td>
                           <td>
-                            <ChangeRole _id={_id} email={email} />
+                            <ChangeRole _id={_id} />
                           </td>
                           <td>
                             <span>
