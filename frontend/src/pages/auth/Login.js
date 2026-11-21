@@ -115,7 +115,7 @@ const Login = () => {
               Login
             </button>
           </form>
-          <Link to="/forget">Forget Password</Link>
+          <Link to="/forgot">Forget Password</Link>
           <span className={styles.register}>
             <Link to="/">Home</Link>
             <p> &nbsp; Don't have an account? &nbsp;</p>
