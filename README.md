@@ -48,17 +48,17 @@ The repository is being actively repaired and refactored. Some authentication fl
 
 ## Prerequisites
 
-- Node.js 22 or newer for both the backend and frontend.
-- The frontend uses Dart Sass (`sass`) rather than the deprecated native `node-sass` package.
+- Node.js 22 or newer for the backend.
+- Node.js 16 for the current frontend toolchain, which still depends on `node-sass@7`. Node.js 16 is end-of-life; this compatibility pin is temporary and the frontend build system must be modernized.
 - A MongoDB database, local or hosted.
 - Google OAuth credentials if Google sign-in is enabled.
 - SMTP credentials if email-based flows are enabled.
 
-> **Legacy dependency note:** The frontend currently uses Create React App and `node-sass`. Check their Node.js compatibility before installing dependencies. The frontend toolchain should be modernized as part of the planned maintenance work before production use.
+> **Frontend maintenance warning:** Create React App is no longer maintained and `node-sass` is deprecated. Frontend CI currently uses Node.js 16 to match the native Sass binding. Do not upgrade the CI Node version independently of the planned Vite/Dart Sass migration.
 
 ## Configuration
 
-Create a `.env` file inside `backend/` and configure the variables required by the backend:
+Copy `backend/.env.example` to `backend/.env` and configure the values for your environment:
 
 | Variable | Purpose |
 | --- | --- |
@@ -76,7 +76,7 @@ Create a `.env` file inside `backend/` and configure the variables required by t
 | `EMAIL_PORT` | Optional SMTP port; defaults to `587` |
 | `EMAIL_REPLY_TO` | Optional reply-to email address; defaults to `EMAIL_USER` |
 
-Create a `.env` file inside `frontend/`:
+Copy `frontend/.env.example` to `frontend/.env`:
 
 | Variable | Purpose |
 | --- | --- |
@@ -93,7 +93,7 @@ Install and run the backend:
 
 ```bash
 cd backend
-npm install
+npm ci
 npm start
 ```
 
@@ -103,11 +103,11 @@ In a second terminal, install and run the frontend:
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm start
 ```
 
-The Create React App development server normally runs on port `3000`. Set `REACT_APP_BACKEND_URL` to the backend origin and ensure the backend CORS allowlist contains the frontend origin.
+The Create React App development server normally runs on port `3000`. Set `REACT_APP_BACKEND_URL` to the backend origin and ensure the backend CORS allowlist contains the frontend origin. The current frontend lockfile and CI workflow target Node.js 16 because of `node-sass@7`; Node.js 16 is end-of-life, so this is a temporary compatibility constraint rather than a recommended runtime.
 
 Use `npm ci` instead of `npm install` when installing from a committed lockfile in a reproducible environment.
 
@@ -118,7 +118,7 @@ Use `npm ci` instead of `npm install` when installing from a committed lockfile 
 | Command | Description |
 | --- | --- |
 | `npm start` | Start the Express server |
-| `npm run backend` | Start the server with nodemon |
+| `npm run backend` | Restart the server automatically when files change (Node.js watch mode) |
 
 ### Frontend
 
@@ -140,7 +140,7 @@ Use `npm ci` instead of `npm install` when installing from a committed lockfile 
 
 ## Project status
 
-This is a learning and portfolio project undergoing a staged refactor. The immediate work focuses on repairing the data model, backend startup dependencies, authentication and token lifecycle, API contracts, authorization, email handling, and frontend integration. Automated tests and CI are also planned.
+This is a learning and portfolio project undergoing a staged refactor. The data model, backend dependencies, authentication and token lifecycle, API contracts, authorization, email handling, and core frontend flows have been repaired in focused pull requests. Backend startup/unit checks and frontend install/test/build workflows run in GitHub Actions. Database-backed integration tests and frontend dependency modernization remain outstanding.
 
 Do not deploy the current `main` branch as a production authentication service until the security fixes, integration tests, and deployment configuration have been completed.
 
