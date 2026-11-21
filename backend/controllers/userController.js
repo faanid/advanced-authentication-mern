@@ -12,6 +12,16 @@ const { OAuth2Client } = require("google-auth-library");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
+const isValidPassword = (password) =>
+  typeof password === "string" &&
+  password.length >= 8 &&
+  Buffer.byteLength(password, "utf8") <= 72;
+
+const isWithinBcryptLimit = (password) =>
+  typeof password === "string" &&
+  password.length > 0 &&
+  Buffer.byteLength(password, "utf8") <= 72;
+
 const setAuthCookie = (res, token) => {
   const isProduction = process.env.NODE_ENV === "production";
 
@@ -93,14 +103,14 @@ const registerUser = asyncHandler(async (req, res) => {
   const normalizedEmail = String(email || "").trim().toLowerCase();
   const normalizedName = String(name || "").trim();
 
-  if (!normalizedName || !normalizedEmail || !password) {
+  if (!normalizedName || !normalizedEmail || typeof password !== "string") {
     res.status(400);
     throw new Error("Name, email, and password are required");
   }
 
-  if (password.length < 6) {
+  if (!isValidPassword(password)) {
     res.status(400);
-    throw new Error("Password must be at least 6 characters");
+    throw new Error("Password must be at least 8 characters and no more than 72 UTF-8 bytes");
   }
 
   const userExists = await User.findOne({ email: normalizedEmail });
@@ -112,12 +122,24 @@ const registerUser = asyncHandler(async (req, res) => {
 
   const userAgent = [req.get("user-agent") || "unknown"];
 
-  const user = await User.create({
-    name: normalizedName,
-    email: normalizedEmail,
-    password,
-    userAgent,
-  });
+  let user;
+
+  try {
+    user = await User.create({
+      name: normalizedName,
+      email: normalizedEmail,
+      password,
+      userAgent,
+    });
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Email already in use. Please login instead.",
+      });
+    }
+
+    throw error;
+  }
 
   const token = generateToken(user._id, user.tokenVersion);
 
@@ -145,13 +167,17 @@ const registerUser = asyncHandler(async (req, res) => {
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (!email || !password) {
+  if (
+    typeof email !== "string" ||
+    !email.trim() ||
+    !isWithinBcryptLimit(password)
+  ) {
     res.status(400);
-    throw new Error("Please add email and password");
+    throw new Error("Please add a valid email and password");
   }
 
-  const normalizedEmail = String(email || "").trim().toLowerCase();
-  const user = await User.findOne({ email: normalizedEmail });
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail }).select("+password");
 
   if (!user) {
     res.status(401);
@@ -536,11 +562,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
 const resetPassword = asyncHandler(async (req, res) => {
   const resetToken = String(req.params.resetToken || "");
-  const password = String(req.body?.password || "");
+  const password = req.body?.password;
 
-  if (password.length < 6) {
+  if (!isValidPassword(password)) {
     res.status(400);
-    throw new Error("Password must be at least 6 characters");
+    throw new Error("Password must be at least 8 characters and no more than 72 UTF-8 bytes");
   }
 
   const userToken = await Token.findOne({
@@ -586,16 +612,16 @@ const resetPassword = asyncHandler(async (req, res) => {
 
 const changePassword = asyncHandler(async (req, res) => {
   const { oldPassword, password } = req.body;
-  const user = await User.findById(req.user._id);
+  const user = await User.findById(req.user._id).select("+password");
 
   if (!user) {
     res.status(404);
     throw new Error("User not found");
   }
 
-  if (!oldPassword || !password || password.length < 6) {
+  if (!isWithinBcryptLimit(oldPassword) || !isValidPassword(password)) {
     res.status(400);
-    throw new Error("Enter your current password and a new password of at least 6 characters");
+    throw new Error("Enter your current password and a new password of at least 8 characters and no more than 72 UTF-8 bytes");
   }
 
   const passwordIsCorrect = await bcrypt.compare(oldPassword, user.password);
@@ -844,7 +870,7 @@ const deleteUser = asyncHandler(async (req, res) => {
 
 const getUsers = asyncHandler(async (req, res) => {
   const users = await User.find()
-    .select("-password")
+    .select("-password -userAgent")
     .sort({ createdAt: -1 })
     .lean();
 
