@@ -3,15 +3,24 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const helmet = require("helmet");
 const cookieParser = require("cookie-parser");
 const userRoute = require("./routes/userRoute");
 const errorHandler = require("./middleware/errorMiddleware");
 
 const app = express();
 
+const normalizeOrigin = (value) => {
+  try {
+    return new URL(value).origin;
+  } catch {
+    return null;
+  }
+};
+
 const configuredOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || "")
   .split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => normalizeOrigin(origin.trim()))
   .filter(Boolean);
 
 const allowedOrigins = new Set([
@@ -21,19 +30,33 @@ const allowedOrigins = new Set([
 ]);
 
 app.disable("x-powered-by");
+app.set("trust proxy", process.env.TRUST_PROXY === "true" ? 1 : false);
+
+app.use(helmet());
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.has(origin)) {
+      if (!origin) {
         return callback(null, true);
       }
 
-      return callback(new Error("Origin is not allowed by CORS"));
+      return callback(null, allowedOrigins.has(normalizeOrigin(origin)));
     },
     credentials: true,
   })
 );
+
+app.use((req, res, next) => {
+  const unsafeMethods = new Set(["POST", "PUT", "PATCH", "DELETE"]);
+  const origin = req.get("origin");
+
+  if (unsafeMethods.has(req.method) && origin && !allowedOrigins.has(normalizeOrigin(origin))) {
+    return res.status(403).json({ message: "Request origin is not allowed" });
+  }
+
+  return next();
+});
 
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: false, limit: "10kb" }));
@@ -66,7 +89,7 @@ const startServer = async () => {
     process.stdout.write(`Server listening on port ${port}\n`);
   });
 
-  const shutdown = async () => {
+  const shutdown = () => {
     server.close(async () => {
       await mongoose.connection.close();
       process.exit(0);
