@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import useRedirectLoggedOutUSer from "../../customHook/useRedirectLoggedOutUser";
 import { deleteUsers, getUsers } from "../../redux/features/auth/authSlice";
 import { shortenText } from "../profile/Profile";
-import Loader, { Spinner } from "../../components/Loader/Loader";
+import { Spinner } from "../../components/Loader/Loader";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
 import {
@@ -24,7 +24,7 @@ function UserList() {
   const [search, setSearch] = useState("");
   const dispatch = useDispatch();
 
-  const { users, isLoading, isLoggedIn, isSuccess, message } = useSelector(
+  const { users, isLoading } = useSelector(
     (state) => state.auth
   );
 
