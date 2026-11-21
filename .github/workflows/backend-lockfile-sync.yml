@@ -1,0 +1,51 @@
+name: Backend dependency lockfile sync
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "backend/package.json"
+      - "backend/package-lock.json"
+
+permissions:
+  contents: write
+
+jobs:
+  sync-lockfile:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out pull request branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Regenerate backend lockfile
+        working-directory: backend
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Verify clean dependency installation
+        working-directory: backend
+        run: npm ci --ignore-scripts
+
+      - name: Validate backend JavaScript syntax
+        run: find backend -path backend/node_modules -prune -o -type f -name "*.js" -print0 | xargs -0 -n 1 node --check
+
+      - name: Commit updated lockfile when needed
+        run: |
+          if ! git diff --quiet -- backend/package-lock.json; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add backend/package-lock.json
+            git commit -m "chore(deps): regenerate backend lockfile"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          fi
