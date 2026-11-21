@@ -8,50 +8,39 @@ import {
   sendAutomatedEmail,
 } from "../../redux/features/email/emailSlice";
 
-function ChangeRole({ _id, email }) {
+function ChangeRole({ _id }) {
   const [userRole, setUserRole] = useState("");
   const dispatch = useDispatch();
 
-  //Upgrade user
-  const changeRole = async (e) => {
-    e.preventDefault();
+  const changeRole = async (event) => {
+    event.preventDefault();
 
     if (!userRole) {
       toast.error("Please select a role");
+      return;
     }
 
-    const userData = {
-      role: userRole,
-      id: _id,
-    };
-    const emailData = {
-      subject: "Account Role Changed - AUTH- F",
-      send_to: email,
-      reply_to: "noreply@fanid",
-      template: "changeRole",
-      url: "/login",
-    };
-
-    await dispatch(sendAutomatedEmail(emailData));
-    await dispatch(upgradeUser(userData));
-    await dispatch(getUsers());
-    dispatch(EMAIL_RESET());
+    try {
+      await dispatch(upgradeUser({ role: userRole, id: _id })).unwrap();
+      await dispatch(sendAutomatedEmail({ id: _id, role: userRole })).unwrap();
+      await dispatch(getUsers()).unwrap();
+      dispatch(EMAIL_RESET());
+    } catch (error) {
+      toast.error(typeof error === "string" ? error : "Unable to update user role");
+    }
   };
 
   return (
     <div className="sort">
-      <form
-        className="--flex-start"
-        onSubmit={(e) => changeRole(e, _id, userRole)}
-      >
-        <select value={userRole} onChange={(e) => setUserRole(e.target.value)}>
+      <form className="--flex-start" onSubmit={changeRole}>
+        <select value={userRole} onChange={(event) => setUserRole(event.target.value)}>
           <option value="">-- select --</option>
-          <option value="subscriber"> Subscriber</option>
-          <option value="author"> Author</option>
-          <option value="admin"> Admin</option>
-          <option value="suspended"> Suspended</option>
+          <option value="subscriber">Subscriber</option>
+          <option value="author">Author</option>
+          <option value="admin">Admin</option>
+          <option value="suspended">Suspended</option>
         </select>
-        <button className="--btn --btn-primary ">
+        <button type="submit" className="--btn --btn-primary">
           <FaCheck size={15} />
         </button>
       </form>
