@@ -48,13 +48,12 @@ The repository is being actively repaired and refactored. Some authentication fl
 
 ## Prerequisites
 
-- Node.js 22 or newer for the backend.
-- Node.js 16 for the current frontend toolchain, which still depends on `node-sass@7`. Node.js 16 is end-of-life; this compatibility pin is temporary and the frontend build system must be modernized.
+- Node.js 22 or newer for both the backend and frontend.
 - A MongoDB database, local or hosted.
 - Google OAuth credentials if Google sign-in is enabled.
 - SMTP credentials if email-based flows are enabled.
 
-> **Frontend maintenance warning:** Create React App is no longer maintained and `node-sass` is deprecated. Frontend CI currently uses Node.js 16 to match the native Sass binding. Do not upgrade the CI Node version independently of the planned Vite/Dart Sass migration.
+> **Frontend maintenance warning:** The frontend uses the deprecated Create React App toolchain. Dart Sass (`sass`) has replaced the deprecated native `node-sass` package, but a future migration to a maintained build tool such as Vite is still recommended.
 
 ## Configuration
 
@@ -107,7 +106,7 @@ npm ci
 npm start
 ```
 
-The Create React App development server normally runs on port `3000`. Set `REACT_APP_BACKEND_URL` to the backend origin and ensure the backend CORS allowlist contains the frontend origin. The current frontend lockfile and CI workflow target Node.js 16 because of `node-sass@7`; Node.js 16 is end-of-life, so this is a temporary compatibility constraint rather than a recommended runtime.
+The Create React App development server normally runs on port `3000`. Set `REACT_APP_BACKEND_URL` to the backend origin and ensure the backend CORS allowlist contains the frontend origin. Frontend CI uses Node.js 22 and the committed lockfile.
 
 Use `npm ci` instead of `npm install` when installing from a committed lockfile in a reproducible environment.
 
