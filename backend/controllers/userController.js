@@ -51,7 +51,6 @@ const clearAuthCookie = (res) => {
 };
 
 
-// Register User
 const registerUser = asyncHandler(async (req, res) => {
   const { name, email, password } = req.body;
   const normalizedEmail = String(email || "").trim().toLowerCase();
@@ -74,10 +73,8 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new Error("Email already in use. Please login instead.");
   }
 
-  // Get UserAgent
   const userAgent = [req.get("user-agent") || "unknown"];
 
-  // Create New User
   const user = await User.create({
     name: normalizedName,
     email: normalizedEmail,
@@ -85,10 +82,8 @@ const registerUser = asyncHandler(async (req, res) => {
     userAgent,
   });
 
-  //Generate Token
   const token = generateToken(user._id, user.tokenVersion);
 
-  //Send HTTP-only cookie
   setAuthCookie(res, token);
 
   if (user) {
@@ -110,11 +105,9 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Login User
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  // Validation
   if (!email || !password) {
     res.status(400);
     throw new Error("Please add email and password");
@@ -147,11 +140,9 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error("New browser or device detected");
   }
 
-  //Generate Token
   const token = generateToken(user._id, user.tokenVersion);
 
   if (user && passwordIsCorrect) {
-    // Send HTTP-only cookie
     setAuthCookie(res, token);
     const { _id, name, email, phone, bio, photo, role, isVerified } = user;
 
@@ -171,7 +162,6 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 });
 
-// Send Login Code
 const sendLoginCode = asyncHandler(async (req, res) => {
   const email = String(req.params.email || "").trim().toLowerCase();
 
@@ -337,7 +327,6 @@ const loginWithCode = asyncHandler(async (req, res) => {
   });
 });
 
-// Send Verification Email
 const sendVerificationEmail = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
@@ -642,6 +631,228 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
     role: user.role,
     isVerified: user.isVerified,
   });
+});
+
+
+const logoutUser = asyncHandler(async (req, res) => {
+  const token = req.cookies?.token;
+  clearAuthCookie(res);
+
+  if (token && process.env.JWT_SECRET) {
+    let payload;
+
+    try {
+      payload = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (error) {
+      if (
+        error.name !== "JsonWebTokenError" &&
+        error.name !== "TokenExpiredError" &&
+        error.name !== "NotBeforeError"
+      ) {
+        throw error;
+      }
+    }
+
+    if (payload?.id) {
+      const user = await User.findById(payload.id);
+
+      if (
+        user &&
+        (payload.tokenVersion ?? 0) === (user.tokenVersion || 0)
+      ) {
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+        await user.save();
+      }
+    }
+  }
+
+  return res.status(200).json({ message: "Logged out successfully" });
+});
+
+const loginStatus = asyncHandler(async (req, res) => {
+  const token = req.cookies?.token;
+
+  if (!token || !process.env.JWT_SECRET) {
+    return res.status(200).json(false);
+  }
+
+  let payload;
+
+  try {
+    payload = jwt.verify(token, process.env.JWT_SECRET);
+  } catch (error) {
+    if (
+      error.name === "JsonWebTokenError" ||
+      error.name === "TokenExpiredError" ||
+      error.name === "NotBeforeError"
+    ) {
+      return res.status(200).json(false);
+    }
+
+    throw error;
+  }
+
+  const user = await User.findById(payload.id).select("_id role tokenVersion");
+  const tokenVersion = Number.isInteger(payload.tokenVersion)
+    ? payload.tokenVersion
+    : 0;
+  const isLoggedIn = Boolean(
+    user &&
+      user.role !== "suspended" &&
+      tokenVersion === (user.tokenVersion || 0)
+  );
+
+  return res.status(200).json(isLoggedIn);
+});
+
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  const updates = req.body || {};
+
+  if (Object.prototype.hasOwnProperty.call(updates, "name")) {
+    const name = String(updates.name || "").trim();
+
+    if (!name || name.length > 80) {
+      return res.status(400).json({ message: "Name must contain 1 to 80 characters" });
+    }
+
+    user.name = name;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, "phone")) {
+    const phone = String(updates.phone || "").trim();
+
+    if (phone.length > 32) {
+      return res.status(400).json({ message: "Phone number is too long" });
+    }
+
+    user.phone = phone;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, "bio")) {
+    const bio = String(updates.bio || "").trim();
+
+    if (bio.length > 500) {
+      return res.status(400).json({ message: "Bio must not exceed 500 characters" });
+    }
+
+    user.bio = bio;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(updates, "photo")) {
+    const photo = String(updates.photo || "").trim();
+
+    if (photo) {
+      let photoUrl;
+
+      try {
+        photoUrl = new URL(photo);
+      } catch {
+        return res.status(400).json({ message: "A valid profile image URL is required" });
+      }
+
+      if (photoUrl.protocol !== "https:") {
+        return res.status(400).json({ message: "Profile image URL must use HTTPS" });
+      }
+    }
+
+    user.photo = photo;
+  }
+
+  await user.save();
+
+  const updatedUser = await User.findById(user._id).select("-password");
+  return res.status(200).json(updatedUser);
+});
+
+const deleteUser = asyncHandler(async (req, res) => {
+  if (String(req.params.id) === String(req.user._id)) {
+    return res.status(400).json({ message: "You cannot delete your own account from this endpoint" });
+  }
+
+  const user = await User.findByIdAndDelete(req.params.id);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  await Token.deleteMany({ userId: user._id });
+
+  return res.status(200).json({ message: "User deleted successfully" });
+});
+
+const getUsers = asyncHandler(async (req, res) => {
+  const users = await User.find()
+    .select("-password")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  return res.status(200).json(users);
+});
+
+const upgradeUser = asyncHandler(async (req, res) => {
+  const { id, role } = req.body || {};
+  const allowedRoles = ["subscriber", "author", "admin", "suspended"];
+
+  if (!id || !allowedRoles.includes(role)) {
+    return res.status(400).json({ message: "A valid user ID and role are required" });
+  }
+
+  if (String(id) === String(req.user._id)) {
+    return res.status(400).json({ message: "You cannot change your own role" });
+  }
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  if (user.role === role) {
+    return res.status(200).json({ message: "User already has this role" });
+  }
+
+  user.role = role;
+  user.tokenVersion = (user.tokenVersion || 0) + 1;
+  await user.save();
+  await Token.deleteMany({ userId: user._id, purpose: "login_otp" });
+
+  return res.status(200).json({ message: "User role updated successfully" });
+});
+
+const sendAutomatedEmail = asyncHandler(async (req, res) => {
+  const { id, role } = req.body || {};
+
+  if (!id || !["subscriber", "author", "admin", "suspended"].includes(role)) {
+    return res.status(400).json({ message: "A valid user ID and role are required" });
+  }
+
+  const user = await User.findById(id).select("name email role");
+
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  if (user.role !== role) {
+    return res.status(409).json({ message: "The user's role has changed; refresh and try again" });
+  }
+
+  await sendEmail(
+    "Your account role has changed - AUTH:F",
+    user.email,
+    process.env.EMAIL_USER,
+    process.env.EMAIL_REPLY_TO || process.env.EMAIL_USER,
+    "changeRole",
+    user.name,
+    buildFrontendUrl("/login")
+  );
+
+  return res.status(200).json({ message: "Role notification email sent" });
 });
 
 module.exports = {
