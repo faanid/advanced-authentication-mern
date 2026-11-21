@@ -79,7 +79,8 @@ function Profile() {
         profileImage !== null &&
         (profileImage.type === "image/jpeg" ||
           profileImage.type === "image/jpg" ||
-          profileImage.type === "image/png")
+          profileImage.type === "image/png" ||
+          profileImage.type === "image/webp")
       ) {
         if (!cloud_name || !upload_preset) {
           throw new Error("Cloudinary upload configuration is missing");
