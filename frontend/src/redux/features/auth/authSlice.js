@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { toast } from "react-toastify";
 import authService from "./authService";
-import useRedirectLoggedOutUSer from "../../../customHook/useRedirectLoggedOutUser";
 
 const initialState = {
   isLoggedIn: false,
