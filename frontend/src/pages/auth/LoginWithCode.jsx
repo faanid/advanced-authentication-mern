@@ -11,6 +11,10 @@ import {
   sendLoginCode,
 } from "../../redux/features/auth/authSlice";
 import Loader from "../../components/Loader/Loader";
+import {
+  isValidLoginCode,
+  sanitizeLoginCode,
+} from "../../utils/authValidation";
 
 const LoginWithCode = () => {
   const [loginCode, setLoginCode] = useState("");
@@ -37,8 +41,8 @@ const LoginWithCode = () => {
     if (loginCode === "") {
       return toast.error("Please fill in the login code");
     }
-    if (loginCode.length !== 6) {
-      return toast.error("Access code must be 6 characters");
+    if (!isValidLoginCode(loginCode)) {
+      return toast.error("Access code must be 6 digits");
     }
 
     await dispatch(loginWithCode({ loginCode, email }));
@@ -77,10 +81,10 @@ const LoginWithCode = () => {
               required
               name="accessCode"
               value={loginCode}
-              onChange={(e) => setLoginCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              onChange={(e) => setLoginCode(sanitizeLoginCode(e.target.value))}
             />
 
-            <button type="submit" className="--btn --btn-primary --btn-block">
+            <button type="submit" className="--btn --btn-primary --btn-block" disabled={!isValidLoginCode(loginCode)}>
               Proceed To Login
             </button>
             <span className="--flex-center">
@@ -90,9 +94,9 @@ const LoginWithCode = () => {
               <p>
                 <Link to="/">- Home</Link>
               </p>
-              <p onClick={sendUserLoginCode} className="v-link --color-primary">
+              <button type="button" onClick={sendUserLoginCode} className="v-link --color-primary">
                 <b>Resend Code</b>
-              </p>
+              </button>
             </div>
           </form>
         </div>

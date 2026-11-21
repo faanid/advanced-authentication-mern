@@ -18,7 +18,7 @@ The repository is being actively repaired and refactored. Some authentication fl
 
 | Area | Technology |
 | --- | --- |
-| Frontend | React 18, React Router, Sass |
+| Frontend | React 18, Vite, React Router, Dart Sass |
 | State management | Redux Toolkit, React Redux |
 | HTTP client | Axios |
 | Backend | Node.js, Express |
@@ -39,6 +39,8 @@ The repository is being actively repaired and refactored. Some authentication fl
 │   ├── utils/             # Shared backend utilities
 │   └── views/             # Email templates
 └── frontend/
+    ├── index.html
+    ├── vite.config.js
     ├── public/
     └── src/
         ├── components/
@@ -48,12 +50,12 @@ The repository is being actively repaired and refactored. Some authentication fl
 
 ## Prerequisites
 
-- Node.js 22 or newer for both the backend and frontend.
+- Node.js 22.12 or newer for both the backend and frontend.
 - A MongoDB database, local or hosted.
 - Google OAuth credentials if Google sign-in is enabled.
 - SMTP credentials if email-based flows are enabled.
 
-> **Frontend maintenance warning:** The frontend uses the deprecated Create React App toolchain. Dart Sass (`sass`) has replaced the deprecated native `node-sass` package, but a future migration to a maintained build tool such as Vite is still recommended.
+> **Frontend tooling:** The frontend now uses Vite and Dart Sass. Keep Node.js at version 22.12 or newer to satisfy the Vite/Vitest toolchain.
 
 ## Configuration
 
@@ -79,10 +81,10 @@ Copy `frontend/.env.example` to `frontend/.env`:
 
 | Variable | Purpose |
 | --- | --- |
-| `REACT_APP_BACKEND_URL` | Backend origin, without the `/api/users` path |
-| `REACT_APP_GOOGLE_CLIENT_ID` | Google OAuth client ID used by the frontend |
-| `REACT_APP_CLOUD_NAME` | Cloudinary cloud name used for profile image uploads |
-| `REACT_APP_UPLOAD_PRESET` | Cloudinary unsigned upload preset used for profile image uploads |
+| `VITE_BACKEND_URL` | Backend origin, without the `/api/users` path |
+| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID used by the frontend |
+| `VITE_CLOUD_NAME` | Cloudinary cloud name used for profile image uploads |
+| `VITE_UPLOAD_PRESET` | Cloudinary unsigned upload preset used for profile image uploads |
 
 Never commit real credentials, tokens, database URLs, or populated environment files. Use separate credentials for development and deployment.
 
@@ -106,7 +108,7 @@ npm ci
 npm start
 ```
 
-The Create React App development server normally runs on port `3000`. Set `REACT_APP_BACKEND_URL` to the backend origin and ensure the backend CORS allowlist contains the frontend origin. Frontend CI uses Node.js 22 and the committed lockfile.
+The Vite development server normally runs on port `3000`. Set `VITE_BACKEND_URL` to the backend origin and ensure the backend CORS allowlist contains the frontend origin. Frontend CI uses Node.js 22 and the committed lockfile.
 
 Use `npm ci` instead of `npm install` when installing from a committed lockfile in a reproducible environment.
 
@@ -123,9 +125,10 @@ Use `npm ci` instead of `npm install` when installing from a committed lockfile 
 
 | Command | Description |
 | --- | --- |
-| `npm start` | Start the development server |
-| `npm test` | Run the Create React App test runner |
-| `npm run build` | Create a production build |
+| `npm start` or `npm run dev` | Start the Vite development server |
+| `npm test` | Run Vitest unit tests |
+| `npm run build` | Create a production build in `dist/` |
+| `npm run preview` | Preview the production build locally |
 
 ## Security notes
 
@@ -139,7 +142,7 @@ Use `npm ci` instead of `npm install` when installing from a committed lockfile 
 
 ## Project status
 
-This is a learning and portfolio project undergoing a staged refactor. The data model, backend dependencies, authentication and token lifecycle, API contracts, authorization, email handling, and core frontend flows have been repaired in focused pull requests. Backend startup/unit checks and frontend install/test/build workflows run in GitHub Actions. Database-backed integration tests and frontend dependency modernization remain outstanding.
+This is a learning and portfolio project undergoing a staged refactor. The data model, backend dependencies, authentication and token lifecycle, API contracts, authorization, email handling, and core frontend flows have been repaired in focused pull requests. Backend startup/unit checks and frontend install/test/build workflows run in GitHub Actions. Database-backed integration tests remain outstanding. The frontend Vite migration and non-breaking dependency remediation are being validated in a dedicated pull request.
 
 Do not deploy the current `main` branch as a production authentication service until the security fixes, integration tests, and deployment configuration have been completed.
 

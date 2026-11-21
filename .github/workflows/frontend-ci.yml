@@ -22,10 +22,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -60,12 +62,13 @@ jobs:
         working-directory: frontend
         env:
           CI: true
-        run: npm test -- --watchAll=false --passWithNoTests
+        run: npm test
 
       - name: Build frontend
         working-directory: frontend
         env:
           CI: true
-          REACT_APP_BACKEND_URL: https://example.invalid
-          REACT_APP_GOOGLE_CLIENT_ID: test-client-id
+          VITE_BACKEND_URL: https://example.invalid
+          VITE_GOOGLE_CLIENT_ID: test-client-id
         run: npm run build
+

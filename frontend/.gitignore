@@ -5,6 +5,7 @@
 .env.*
 !.env.example
 /coverage
+/dist
 /build
 .DS_Store
 npm-debug.log*
