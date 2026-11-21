@@ -212,9 +212,7 @@ const sendLoginCode = asyncHandler(async (req, res) => {
     );
   } catch (error) {
     if (error.code === 11000) {
-      return res.status(429).json({
-        message: "Please wait before requesting another login code",
-      });
+      return res.status(200).json(genericResponse);
     }
 
     throw error;
