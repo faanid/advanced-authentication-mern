@@ -39,6 +39,8 @@ The repository is being actively repaired and refactored. Some authentication fl
 │   ├── utils/             # Shared backend utilities
 │   └── views/             # Email templates
 └── frontend/
+    ├── index.html
+    ├── vite.config.js
     ├── public/
     └── src/
         ├── components/
@@ -106,7 +108,7 @@ npm ci
 npm start
 ```
 
-The Vite development server normally runs on port `3000`. Set `REACT_APP_BACKEND_URL` to the backend origin and ensure the backend CORS allowlist contains the frontend origin. Frontend CI uses Node.js 22 and the committed lockfile.
+The Vite development server normally runs on port `3000`. Set `VITE_BACKEND_URL` to the backend origin and ensure the backend CORS allowlist contains the frontend origin. Frontend CI uses Node.js 22 and the committed lockfile.
 
 Use `npm ci` instead of `npm install` when installing from a committed lockfile in a reproducible environment.
 
@@ -140,7 +142,7 @@ Use `npm ci` instead of `npm install` when installing from a committed lockfile 
 
 ## Project status
 
-This is a learning and portfolio project undergoing a staged refactor. The data model, backend dependencies, authentication and token lifecycle, API contracts, authorization, email handling, and core frontend flows have been repaired in focused pull requests. Backend startup/unit checks and frontend install/test/build workflows run in GitHub Actions. Database-backed integration tests and frontend dependency modernization remain outstanding.
+This is a learning and portfolio project undergoing a staged refactor. The data model, backend dependencies, authentication and token lifecycle, API contracts, authorization, email handling, and core frontend flows have been repaired in focused pull requests. Backend startup/unit checks and frontend install/test/build workflows run in GitHub Actions. Database-backed integration tests remain outstanding. The frontend Vite migration and non-breaking dependency remediation are being validated in a dedicated pull request.
 
 Do not deploy the current `main` branch as a production authentication service until the security fixes, integration tests, and deployment configuration have been completed.
 
