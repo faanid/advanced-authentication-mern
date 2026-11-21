@@ -6,10 +6,8 @@ const sendEmail = require("../utils/sendEmail");
 const { generateToken, hashToken } = require("../utils/index");
 const Token = require("../models/tokenModel");
 const crypto = require("crypto");
-const Cryptr = require("cryptr");
 const { OAuth2Client } = require("google-auth-library");
 
-const cryptr = new Cryptr(process.env.CRYPTR_KEY);
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -103,36 +101,10 @@ const loginUser = asyncHandler(async (req, res) => {
     throw new Error("Invalid email or password");
   }
 
-  // Trigger 2FA for  unknown UserAgent
-  const thisUserAgent = req.get("user-agent") || "unknown";
-  const allowedAgent = user.userAgent.includes(thisUserAgent);
+  const currentUserAgent = req.get("user-agent") || "unknown";
 
-  if (!allowedAgent) {
-    // Generate 6 digit code
-    const loginCode = math.floor(100000 + Math.random() * 900000);
-    console.log(loginCode);
-
-    // Encrypt login code before saving to DB
-    const encryptedLoginCode = cryptr.encrypt(loginCode.toString());
-
-    // Save the generated Code in DB
-
-    // Delete Token if it's exists in DB
-    let userToken = await Token.findOne({ userId: user._id });
-    if (userToken) {
-      await userToken.deleteOne();
-    }
-
-    // Save Token to DB
-    const hashedToken = hashToken(resetToken);
-    await new Token({
-      userId: user._id,
-      lToken: encryptedLoginCode, //reset token
-      createdAt: Date.now(),
-      expiresAt: Date.now() + 30 * (60 * 1000), // 60 mins
-    }).save();
-
-    res.status(400);
+  if (!user.userAgent.includes(currentUserAgent)) {
+    res.status(401);
     throw new Error("New browser or device detected");
   }
 
@@ -169,52 +141,56 @@ const loginUser = asyncHandler(async (req, res) => {
 
 // Send Login Code
 const sendLoginCode = asyncHandler(async (req, res) => {
-  const { email } = req.params;
+  const email = String(req.params.email || "").trim().toLowerCase();
+
+  if (!email) {
+    res.status(400);
+    throw new Error("Email is required");
+  }
+
   const user = await User.findOne({ email });
 
   if (!user) {
     res.status(404);
-    throw new Error("User not found!");
+    throw new Error("User not found");
   }
 
-  // Find Login Code in DB
-  let userToken = await Token.findOne({
+  const loginCode = crypto.randomInt(100000, 1000000).toString();
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  await Token.deleteMany({
     userId: user._id,
-    expiresAt: { $gt: Date.now() },
+    purpose: "login_otp",
   });
 
-  if (!userToken) {
-    res.status(404);
-    throw new Error("Invalid or Expired token, please login again");
-  }
-
-  const loginCode = userToken.lToken;
-  const decryptedLoginCode = cryptr.decrypt(loginCode);
-
-  // Send Login Code
-  const subject = "Login Access Code - AUTH:F";
-  const send_to = email;
-  const sent_from = process.env.EMAIL_USER;
-  const reply_to = "noreply@fti.com";
-  const template = "loginCode";
-  const name = user.name;
-  const link = decryptedLoginCode;
+  const loginToken = await Token.create({
+    userId: user._id,
+    purpose: "login_otp",
+    loginToken: hashToken(loginCode),
+    attempts: 0,
+    createdAt: new Date(),
+    expiresAt,
+  });
 
   try {
     await sendEmail(
-      subject,
-      send_to,
-      sent_from,
-      reply_to,
-      template,
-      name,
-      link
+      "Login Access Code - AUTH:F",
+      user.email,
+      process.env.EMAIL_USER,
+      process.env.EMAIL_REPLY_TO || process.env.EMAIL_USER,
+      "loginCode",
+      user.name,
+      loginCode
     );
-    res.status(200).json({ message: `Access code sent to  ${email} !` });
   } catch (error) {
-    res.status(500);
-    throw new Error("Email not send, please try again.");
+    await Token.deleteOne({ _id: loginToken._id });
+    res.status(502);
+    throw new Error("Unable to send the login code");
   }
+
+  return res.status(200).json({
+    message: `Access code sent to ${user.email}`,
+  });
 });
 
 const getUser = asyncHandler(async (req, res) => {
@@ -241,64 +217,81 @@ const getUser = asyncHandler(async (req, res) => {
 
 // Login with Code
 const loginWithCode = asyncHandler(async (req, res) => {
-  const { email } = req.params;
-  const { loginCode } = req.body;
+  const email = String(req.params.email || "").trim().toLowerCase();
+  const loginCode = String(req.body.loginCode || "").trim();
+
+  if (!/^\\d{6}$/.test(loginCode)) {
+    res.status(400);
+    throw new Error("A valid six-digit login code is required");
+  }
 
   const user = await User.findOne({ email });
 
   if (!user) {
-    res.status(404);
-    throw new Error("User not found!");
+    res.status(401);
+    throw new Error("Invalid email or login code");
   }
 
-  // Find user login token
   const userToken = await Token.findOne({
-    userToke: user.id,
-    expiresAt: { gt: Data.now() },
+    userId: user._id,
+    purpose: "login_otp",
+    expiresAt: { $gt: new Date() },
+    attempts: { $lt: 5 },
   });
 
   if (!userToken) {
-    res.status(404);
-    throw new Error("Invalid or Expired Token, Please log in again");
+    res.status(401);
+    throw new Error("Login code is invalid or expired");
   }
 
-  const decryptedLoginCode = cryptr.decrypt(userToken.lToken);
+  const expectedHash = Buffer.from(userToken.loginToken, "hex");
+  const receivedHash = Buffer.from(hashToken(loginCode), "hex");
+  const isCodeValid =
+    expectedHash.length === receivedHash.length &&
+    crypto.timingSafeEqual(expectedHash, receivedHash);
 
-  if (loginCode !== decryptedLoginCode) {
-    res.status(400);
-    throw new Error("Incorrect login code, please tyr again");
-  } else {
-    // Register userAgent
-    const thisUserAgent = req.get("user-agent") || "unknown";
-    user.userAgent.push(thisUserAgent);
-    await user.save();
+  if (!isCodeValid) {
+    userToken.attempts += 1;
 
-    //Generate Token
-    const token = generateToken(user._id);
+    if (userToken.attempts >= 5) {
+      await userToken.deleteOne();
+    } else {
+      await userToken.save();
+    }
 
-    //Send HTTP-only cookie
-    res.cookie("token", token, {
-      path: "/",
-      httpOnly: true,
-      expires: new Date(Date.now() + 1000 * 86400), //1 day
-      sameSite: "none",
-      secure: false, //when deploy change it to "true"
-    });
-
-    const { _id, name, email, phone, bio, photo, role, isVerified } = user;
-
-    res.status(200).json({
-      _id,
-      name,
-      email,
-      phone,
-      bio,
-      photo,
-      role,
-      isVerified,
-      token,
-    });
+    res.status(401);
+    throw new Error("Incorrect login code");
   }
+
+  const currentUserAgent = req.get("user-agent") || "unknown";
+  user.userAgent = [...new Set([...(user.userAgent || []), currentUserAgent])];
+  await user.save();
+  await userToken.deleteOne();
+
+  const token = generateToken(user._id);
+  const isProduction = process.env.NODE_ENV === "production";
+
+  res.cookie("token", token, {
+    path: "/",
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
+  });
+
+  const { _id, name, phone, bio, photo, role, isVerified } = user;
+
+  return res.status(200).json({
+    _id,
+    name,
+    email: user.email,
+    phone,
+    bio,
+    photo,
+    role,
+    isVerified,
+    token,
+  });
 });
 
 // Send Verification Email
