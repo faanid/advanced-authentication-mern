@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./UserList.scss";
 import PageMenu from "../../components/pageMenu/PageMenu";
 import UserStats from "../../components/userStats/UserStats";
@@ -24,6 +25,8 @@ function UserList() {
   const [search, setSearch] = useState("");
   const [itemOffset, setItemOffset] = useState(0);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const currentUser = useSelector((state) => state.auth.user);
 
   const { users, isLoading } = useSelector(
     (state) => state.auth
@@ -31,8 +34,15 @@ function UserList() {
 
   const filteredUsers = useSelector(selectUser);
   useEffect(() => {
-    dispatch(getUsers());
-  }, [dispatch]);
+    if (currentUser && currentUser.role !== "admin") {
+      navigate("/profile", { replace: true });
+      return;
+    }
+
+    if (currentUser?.role === "admin") {
+      dispatch(getUsers());
+    }
+  }, [currentUser, dispatch, navigate]);
 
   const removeUser = async (id) => {
     try {
