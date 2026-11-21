@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { GrInsecure } from "react-icons/gr";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
@@ -14,7 +14,8 @@ import Loader from "../../components/Loader/Loader";
 
 const LoginWithCode = () => {
   const [loginCode, setLoginCode] = useState("");
-  const { email } = useParams();
+  const location = useLocation();
+  const email = location.state?.email || "";
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -44,12 +45,17 @@ const LoginWithCode = () => {
   };
 
   useEffect(() => {
+    if (!email) {
+      navigate("/login", { replace: true });
+      return;
+    }
+
     if (isSuccess && isLoggedIn) {
       navigate("/profile");
     }
 
     dispatch(RESET());
-  }, [isLoggedIn, isSuccess, dispatch, navigate]);
+  }, [email, isLoggedIn, isSuccess, dispatch, navigate]);
 
   return (
     <div className={`container ${styles.auth}`}>
