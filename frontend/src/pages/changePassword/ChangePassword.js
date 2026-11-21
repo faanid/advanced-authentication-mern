@@ -14,7 +14,6 @@ import {
   RESET,
 } from "../../redux/features/auth/authSlice";
 import { Spinner } from "../../components/Loader/Loader";
-import { sendAutomatedEmail } from "../../redux/features/email/emailSlice";
 
 const initialState = {
   oldPassword: "",
@@ -39,32 +38,30 @@ const ChangePassword = () => {
 
   const updatePassword = async (e) => {
     e.preventDefault();
-    if (!oldPassword || !password || !password) {
-      toast.error("All fields are required");
+
+    if (!oldPassword || !password || !password2) {
+      return toast.error("All fields are required");
     }
+
+    if (password.length < 6) {
+      return toast.error("Password must be at least 6 characters");
+    }
+
     if (password !== password2) {
       return toast.error("Passwords do not match");
     }
 
-    const userData = {
-      oldPassword,
-      password,
-    };
+    if (oldPassword === password) {
+      return toast.error("New password must be different from the current password");
+    }
 
-    const emailData = {
-      subject: "Password Changed - AUTH- F",
-      send_to: user.email,
-      reply_to: "noreply@fanid",
-      template: "changePassword",
-      url: "/forgot",
-    };
+    const result = await dispatch(changePassword({ oldPassword, password }));
 
-    await dispatch(changePassword(userData));
-    await dispatch(sendAutomatedEmail(emailData));
-    await dispatch(logout());
-    await dispatch(RESET(userData));
-
-    navigate("/login");
+    if (changePassword.fulfilled.match(result)) {
+      await dispatch(logout());
+      dispatch(RESET());
+      navigate("/login");
+    }
   };
 
   return (
