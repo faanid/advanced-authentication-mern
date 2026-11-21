@@ -18,7 +18,6 @@ const Reset = () => {
   const [formData, setFormData] = useState(initialState);
   const { password, password2 } = formData;
   const { resetToken } = useParams();
-  // console.log(resetToken);
 
   const { isLoading, isSuccess, message } = useSelector(
     (state) => state.auth
