@@ -73,7 +73,7 @@ const registerUser = asyncHandler(async (req, res) => {
   });
 
   //Generate Token
-  const token = generateToken(user._id);
+  const token = generateToken(user._id, user.tokenVersion);
 
   //Send HTTP-only cookie
   setAuthCookie(res, token);
@@ -135,7 +135,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   //Generate Token
-  const token = generateToken(user._id);
+  const token = generateToken(user._id, user.tokenVersion);
 
   if (user && passwordIsCorrect) {
     // Send HTTP-only cookie
@@ -310,7 +310,7 @@ const loginWithCode = asyncHandler(async (req, res) => {
   user.userAgent = [...new Set([...(user.userAgent || []), currentUserAgent])];
   await user.save();
 
-  const token = generateToken(user._id);
+  const token = generateToken(user._id, user.tokenVersion);
   setAuthCookie(res, token);
 
   const { _id, name, phone, bio, photo, role, isVerified } = user;
@@ -723,7 +723,7 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
     throw new Error("User suspended, please contact support");
   }
 
-  const token = generateToken(user._id);
+  const token = generateToken(user._id, user.tokenVersion);
   setAuthCookie(res, token);
 
   return res.status(200).json({
