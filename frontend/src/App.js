@@ -47,7 +47,7 @@ function App() {
   const user = useSelector(selectUser);
 
   useEffect(() => {
-    dispatch(getLoginStatus);
+    dispatch(getLoginStatus());
     if (isLoggedIn && user === null) {
       dispatch(getUser());
     }
