@@ -22,7 +22,13 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Please add a password"],
-      minlength: [6, "Password must be at least 6 characters"],
+      minlength: [8, "Password must be at least 8 characters"],
+      maxlength: [72, "Password must not exceed 72 characters"],
+      select: false,
+      validate: {
+        validator: (value) => Buffer.byteLength(value, "utf8") <= 72,
+        message: "Password must not exceed 72 UTF-8 bytes",
+      },
     },
     photo: {
       type: String,
