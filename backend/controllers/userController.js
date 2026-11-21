@@ -489,12 +489,16 @@ const loginStatus = asyncHandler(async (req, res) => {
 
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
-    const userExists = await User.exists({
-      _id: verified.id,
-      role: { $ne: "suspended" },
-    });
+    const user = await User.findById(verified.id).select("tokenVersion role");
+    const tokenVersion = Number.isInteger(verified.tokenVersion)
+      ? verified.tokenVersion
+      : 0;
+    const sessionIsValid =
+      user &&
+      user.role !== "suspended" &&
+      tokenVersion === (user.tokenVersion || 0);
 
-    return res.status(200).json(Boolean(userExists));
+    return res.status(200).json(Boolean(sessionIsValid));
   } catch (error) {
     if (
       ["JsonWebTokenError", "TokenExpiredError", "NotBeforeError"].includes(
