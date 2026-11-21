@@ -34,7 +34,7 @@ const Reset = () => {
   const reset = async (e) => {
     e.preventDefault();
     if (password.length < 6) {
-      return toast.error("Password must be up to 6 characters");
+      return toast.error("Password must be at least 6 characters");
     }
 
     if (password !== password2) {
