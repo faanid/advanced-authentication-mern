@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { AdminAuthorLink } from "../protect/hiddenLink";
+import { AdminOnlyLink } from "../protect/hiddenLink";
 
 function PageMenu() {
   return (
