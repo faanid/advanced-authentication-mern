@@ -18,15 +18,19 @@ const Header = () => {
   };
 
   const logoutUser = async () => {
-    dispatch(RESET());
-    await dispatch(logout());
-    navigate("/login");
+    try {
+      await dispatch(logout()).unwrap();
+      dispatch(RESET());
+      navigate("/login");
+    } catch (error) {
+      return;
+    }
   };
 
   return (
     <header className="header">
       <nav>
-        <div className="logo" onCLick={goHome}>
+        <div className="logo" onClick={goHome}>
           <BiLogInCircle size={35} />
           <span>AUTH:F</span>
         </div>
@@ -39,9 +43,9 @@ const Header = () => {
           </ShowOnLogin>
           <ShowOnLogout>
             <li>
-              <button className="--btn --btn-primary">
-                <Link to="/login">Login</Link>
-              </button>
+              <Link to="/login" className="--btn --btn-primary">
+                Login
+              </Link>
             </li>
           </ShowOnLogout>
           <ShowOnLogin>

@@ -9,7 +9,6 @@ import {
   CALC_VERIFIED_USER,
 } from "../../redux/features/auth/authSlice";
 
-//Icons
 const icon1 = <FaUsers size={40} color="#fff" />;
 const icon2 = <BiUserCheck size={40} color="#fff" />;
 const icon3 = <BiUserMinus size={40} color="#fff" />;
@@ -26,7 +25,7 @@ function UserStats() {
   useEffect(() => {
     dispatch(CALC_VERIFIED_USER());
     dispatch(CALC_SUSPENDED_USER());
-  }, [dispatch, users]); // if the user changed then re-calculate
+  }, [dispatch, users]);
 
   return (
     <div className="user-summary">

@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./UserList.scss";
 import PageMenu from "../../components/pageMenu/PageMenu";
 import UserStats from "../../components/userStats/UserStats";
@@ -22,7 +23,10 @@ function UserList() {
   useRedirectLoggedOutUSer("/login");
 
   const [search, setSearch] = useState("");
+  const [itemOffset, setItemOffset] = useState(0);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const currentUser = useSelector((state) => state.auth.user);
 
   const { users, isLoading } = useSelector(
     (state) => state.auth
@@ -30,12 +34,23 @@ function UserList() {
 
   const filteredUsers = useSelector(selectUser);
   useEffect(() => {
-    dispatch(getUsers());
-  }, [dispatch]);
+    if (currentUser && currentUser.role !== "admin") {
+      navigate("/profile", { replace: true });
+      return;
+    }
+
+    if (currentUser?.role === "admin") {
+      dispatch(getUsers());
+    }
+  }, [currentUser, dispatch, navigate]);
 
   const removeUser = async (id) => {
-    await dispatch(deleteUsers(id));
-    dispatch(getUsers());
+    try {
+      await dispatch(deleteUsers(id)).unwrap();
+      await dispatch(getUsers()).unwrap();
+    } catch (error) {
+      return;
+    }
   };
 
   const confirmDelete = (id) => {
@@ -49,7 +64,6 @@ function UserList() {
         },
         {
           label: "Cancel",
-          // onClick: () => alert("Click No"),
         },
       ],
     });
@@ -57,23 +71,18 @@ function UserList() {
 
   useEffect(() => {
     dispatch(FILTER_USERS({ users, search }));
+    setItemOffset(0);
   }, [dispatch, users, search]);
 
-  //Begin Pagination
   const itemsPerPage = 5;
-  const [itemOffset, setItemOffset] = useState(0);
-
   const endOffset = itemOffset + itemsPerPage;
   const currentItems = filteredUsers.slice(itemOffset, endOffset);
   const pageCount = Math.ceil(filteredUsers.length / itemsPerPage);
 
-  // Invoke when user click to request another page.
   const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % filteredUsers.length;
+    const newOffset = event.selected * itemsPerPage;
     setItemOffset(newOffset);
   };
-
-  //End Pagination
 
   return (
     <section>
@@ -95,7 +104,7 @@ function UserList() {
                 />
               </span>
             </div>
-            {/* Table */}
+            
             {!isLoading && users.length === 0 ? (
               <p>No user found...</p>
             ) : (
@@ -116,20 +125,23 @@ function UserList() {
                       const { _id, name, email, role } = user;
                       return (
                         <tr key={_id}>
-                          <td>{index + 1}</td>
+                          <td>{itemOffset + index + 1}</td>
                           <td>{shortenText(name, 8)}</td>
                           <td>{email}</td>
                           <td>{role}</td>
                           <td>
-                            <ChangeRole _id={_id} email={email} />
+                            <ChangeRole _id={_id} />
                           </td>
                           <td>
                             <span>
-                              <FaTrashAlt
-                                size={20}
-                                color="red"
+                              <button
+                                type="button"
+                                className="--btn --btn-danger"
+                                aria-label={`Delete ${name}`}
                                 onClick={() => confirmDelete(_id)}
-                              />
+                              >
+                                <FaTrashAlt size={18} />
+                              </button>
                             </span>
                           </td>
                         </tr>

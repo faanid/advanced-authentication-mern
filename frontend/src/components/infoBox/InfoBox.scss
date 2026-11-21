@@ -13,11 +13,9 @@
     transform: translateY(0);
     transition: all 0.3s;
   
-    // background-color: green;
   
     &:hover {
       cursor: pointer;
-      // border: 3px solid #fff;
       transform: translateY(-5px);
     }
   
@@ -29,12 +27,6 @@
       color: #fff;
     }
   
-    // .card {
-    //   border: 1px solid #ccc;
-    //   border-bottom: 3px solid var(--light-blue);
-    //   padding: 5px;
-    //   background-color: #f5f6fa;
-    // }
   }
   
   @media screen and (max-width: 600px) {

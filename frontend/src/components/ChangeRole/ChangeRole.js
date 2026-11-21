@@ -21,12 +21,19 @@ function ChangeRole({ _id }) {
     }
 
     try {
-      await dispatch(upgradeUser({ role: userRole, id: _id })).unwrap();
-      await dispatch(sendAutomatedEmail({ id: _id, role: userRole })).unwrap();
-      await dispatch(getUsers()).unwrap();
+      const updateResult = await dispatch(
+        upgradeUser({ role: userRole, id: _id })
+      );
+
+      if (updateResult.meta.requestStatus !== "fulfilled") {
+        return;
+      }
+
+      setUserRole("");
+      await dispatch(getUsers());
+      await dispatch(sendAutomatedEmail({ id: _id, role: userRole }));
+    } finally {
       dispatch(EMAIL_RESET());
-    } catch (error) {
-      toast.error(typeof error === "string" ? error : "Unable to update user role");
     }
   };
 
