@@ -45,14 +45,14 @@ jobs:
           node - <<'NODE'
           const report = require("./npm-audit.json");
           const counts = report.metadata?.vulnerabilities || {};
-          process.stdout.write(`Vulnerability totals: ${JSON.stringify(counts)}\\n`);
+          process.stdout.write(`Vulnerability totals: ${JSON.stringify(counts)}\n`);
           for (const [name, vulnerability] of Object.entries(report.vulnerabilities || {})) {
             process.stdout.write([
               name,
               vulnerability.severity,
               vulnerability.range,
               JSON.stringify(vulnerability.fixAvailable),
-            ].join("\\t") + "\\n");
+            ].join("\t") + "\n");
           }
           NODE
 
