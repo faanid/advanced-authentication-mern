@@ -34,6 +34,11 @@ const buildFrontendUrl = (path) => {
   return process.env.FRONTEND_URL.replace(/\/+$/, "") + path;
 };
 
+const hasRecentToken = (token, cooldownMs = 60 * 1000) => {
+  const createdAt = new Date(token?.createdAt).getTime();
+  return Number.isFinite(createdAt) && Date.now() - createdAt < cooldownMs;
+};
+
 const clearAuthCookie = (res) => {
   const isProduction = process.env.NODE_ENV === "production";
 
@@ -187,10 +192,7 @@ const sendLoginCode = asyncHandler(async (req, res) => {
     purpose: "login_otp",
   });
 
-  if (
-    existingToken &&
-    Date.now() - existingToken.createdAt.getTime() < 60 * 1000
-  ) {
+  if (hasRecentToken(existingToken)) {
     res.status(429);
     throw new Error("Please wait before requesting another login code");
   }
@@ -353,10 +355,7 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
     purpose: "email_verification",
   });
 
-  if (
-    existingToken &&
-    Date.now() - existingToken.createdAt.getTime() < 60 * 1000
-  ) {
+  if (hasRecentToken(existingToken)) {
     res.status(429);
     throw new Error("Please wait before requesting another verification email");
   }
@@ -455,10 +454,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     purpose: "password_reset",
   });
 
-  if (
-    existingToken &&
-    Date.now() - existingToken.createdAt.getTime() < 60 * 1000
-  ) {
+  if (hasRecentToken(existingToken)) {
     return res.status(200).json({ message: genericMessage });
   }
 
