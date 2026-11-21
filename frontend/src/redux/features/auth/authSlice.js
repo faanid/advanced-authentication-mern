@@ -304,33 +304,13 @@ const authSlice = createSlice({
       state.isLoading = false;
       state.message = "";
     },
-    CALC_VERIFIED_USER(state, action) {
-      const array = [];
-      state.users.map((user) => {
-        const { isVerified } = user;
-        return array.push(isVerified);
-      });
-      let count = 0;
-      array.forEach((item) => {
-        if (item === true) {
-          count += 1;
-        }
-      });
-      state.verifiedUsers = count;
+    CALC_VERIFIED_USER(state) {
+      state.verifiedUsers = state.users.filter((user) => user.isVerified).length;
     },
-    CALC_SUSPENDED_USER(state, action) {
-      const array = [];
-      state.users.map((user) => {
-        const { role } = user;
-        return array.push(role);
-      });
-      let count = 0;
-      array.forEach((item) => {
-        if (item === "suspended") {
-          count += 1;
-        }
-      });
-      state.suspendedUsers = count;
+    CALC_SUSPENDED_USER(state) {
+      state.suspendedUsers = state.users.filter(
+        (user) => user.role === "suspended"
+      ).length;
     },
   },
 
