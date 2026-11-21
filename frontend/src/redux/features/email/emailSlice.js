@@ -8,7 +8,6 @@ const initialState = {
   msg: "",
 };
 
-// Send Automated Email
 export const sendAutomatedEmail = createAsyncThunk(
   "email/sendAutomatedEmail",
   async (userData, thunkAPI) => {
@@ -39,7 +38,6 @@ const emailSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      //Send automated email
       .addCase(sendAutomatedEmail.pending, (state, action) => {
         state.sendingEmail = true;
       })
@@ -53,7 +51,7 @@ const emailSlice = createSlice({
         state.sendingEmail = false;
         state.emailSent = false;
         state.msg = action.payload;
-        toast.error(action.payload);
+        toast.warning("Role was updated, but the notification email could not be sent");
       });
   },
 });
