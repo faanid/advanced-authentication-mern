@@ -90,7 +90,6 @@ const registerUser = asyncHandler(async (req, res) => {
       photo,
       role,
       isVerified,
-      token,
     });
   } else {
     res.status(400);
@@ -125,6 +124,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
   const currentUserAgent = req.get("user-agent") || "unknown";
 
+  if (user.role === "suspended") {
+    res.status(403);
+    throw new Error("User suspended, please contact support");
+  }
+
   if (!user.userAgent.includes(currentUserAgent)) {
     res.status(401);
     throw new Error("New browser or device detected");
@@ -147,7 +151,6 @@ const loginUser = asyncHandler(async (req, res) => {
       photo,
       role,
       isVerified,
-      token,
     });
   } else {
     res.status(500);
@@ -321,7 +324,6 @@ const loginWithCode = asyncHandler(async (req, res) => {
     photo,
     role,
     isVerified,
-    token,
   });
 });
 
