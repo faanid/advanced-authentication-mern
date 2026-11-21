@@ -15,7 +15,7 @@ on:
       - ".github/workflows/frontend-ci.yml"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   frontend:
@@ -30,12 +30,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Generate and safely update the frontend lockfile
-        working-directory: frontend
-        run: |
-          npm install --package-lock-only --ignore-scripts
-          npm audit fix --package-lock-only --ignore-scripts || true
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: frontend
@@ -76,17 +72,3 @@ jobs:
           VITE_GOOGLE_CLIENT_ID: test-client-id
         run: npm run build
 
-      - name: Commit refreshed frontend lockfile
-        if: github.event_name == 'pull_request'
-        env:
-          HEAD_REF: ${{ github.head_ref }}
-        run: |
-          if [ -f frontend/package-lock.json ]; then
-            git add frontend/package-lock.json
-            if ! git diff --cached --quiet; then
-              git config user.name "github-actions[bot]"
-              git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-              git commit -m "chore(frontend): refresh dependency lockfile"
-              git push origin "HEAD:${HEAD_REF}"
-            fi
-          fi
