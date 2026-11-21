@@ -44,7 +44,7 @@ const emailSlice = createSlice({
         state.sendingEmail = true;
       })
       .addCase(sendAutomatedEmail.fulfilled, (state, action) => {
-        state.sendingEmail = true;
+        state.sendingEmail = false;
         state.emailSent = true;
         state.msg = action.payload;
         toast.success(action.payload);
@@ -53,7 +53,7 @@ const emailSlice = createSlice({
         state.sendingEmail = false;
         state.emailSent = false;
         state.msg = action.payload;
-        toast.success(action.payload);
+        toast.error(action.payload);
       });
   },
 });
