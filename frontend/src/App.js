@@ -1,7 +1,6 @@
 import { useEffect } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import Home from "./pages/home/Home";
 import Layout from "./components/layout/Layout";
 import Login from "./pages/auth/Login";
@@ -26,20 +25,6 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
 
 axios.defaults.withCredentials = true;
 
-/**
- * Better comments Extension
- * * Important
- * ! For Alert
- * ? for questions cm
- * TODO: for todo cm
- * @param myParam the parameter for this method
- */
-
-//! cm for alert
-//* this is highlight
-//? this is a query
-////this  line of code
-//TODO: create some test cases
 
 function App() {
   const dispatch = useDispatch();
@@ -106,7 +91,6 @@ function App() {
             />
           </Routes>
         </GoogleOAuthProvider>
-        ;
       </BrowserRouter>
     </>
   );
