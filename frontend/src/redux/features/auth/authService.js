@@ -1,6 +1,11 @@
 import axios from "axios";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL?.replace(/\/+$/, "");
+
+if (!BACKEND_URL) {
+  throw new Error("REACT_APP_BACKEND_URL must be configured");
+}
+
 export const API_URL = `${BACKEND_URL}/api/users/`;
 
 // Validate email
@@ -23,7 +28,7 @@ const login = async (userData) => {
 
 // Logout User
 const logout = async () => {
-  const response = await axios.get(API_URL + "logout");
+  const response = await axios.post(API_URL + "logout");
   return response.data.message;
 };
 // Get Login Status
@@ -34,7 +39,7 @@ const getLoginStatus = async () => {
 
 // Get User Profile
 const getUser = async () => {
-  const response = await axios.get(API_URL + "getUSer");
+  const response = await axios.get(API_URL + "getUser");
   return response.data;
 };
 
@@ -46,14 +51,14 @@ const updateUser = async (userData) => {
 
 // Send Verification Email
 const sendVerificationEmail = async () => {
-  const response = await axios.patch(API_URL + "sendVerificationEmail");
+  const response = await axios.post(API_URL + "sendVerificationEmail");
   return response.data.message;
 };
 
 // Verify User
 const verifyUser = async (verificationToken) => {
   const response = await axios.patch(
-    `${API_URL} verifyUser/${verificationToken}`
+    `${API_URL}verifyToken/${encodeURIComponent(verificationToken)}`
   );
   return response.data.message;
 };
@@ -81,7 +86,7 @@ const deleteUsers = async (id) => {
 // Reset Password
 const resetPassword = async (userData, resetToken) => {
   const response = await axios.patch(
-    `${API_URL} resetPassword/${resetToken}`,
+    `${API_URL}resetPassword/${encodeURIComponent(resetToken)}`,
     userData
   );
   return response.data.message;

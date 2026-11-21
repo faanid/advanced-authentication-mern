@@ -30,7 +30,7 @@ const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { isLoading, isLoggedIn, isSuccess, message } = useSelector(
+  const { isLoading, isLoggedIn, isSuccess } = useSelector(
     (state) => state.auth
   );
 
@@ -89,7 +89,7 @@ const Register = () => {
       return toast.error("All fields are required");
     }
     if (password.length < 6) {
-      return toast.error("Password must be up to 6 characters");
+      return toast.error("Password must be at least 6 characters");
     }
     if (!validateEmail(email)) {
       return toast.error("Please enter a valid email");

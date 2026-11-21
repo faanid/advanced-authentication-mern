@@ -4,7 +4,6 @@ import { MdPassword } from "react-icons/md";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
-import { AiOutlineMail } from "react-icons/ai";
 import Loader from "../../components/Loader/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -21,7 +20,7 @@ const Reset = () => {
   const { resetToken } = useParams();
   // console.log(resetToken);
 
-  const { isLoading, isLoggedIn, isSuccess, message } = useSelector(
+  const { isLoading, isSuccess, message } = useSelector(
     (state) => state.auth
   );
   const dispatch = useDispatch();
@@ -35,7 +34,7 @@ const Reset = () => {
   const reset = async (e) => {
     e.preventDefault();
     if (password.length < 6) {
-      return toast.error("Password must be up to 6 characters");
+      return toast.error("Password must be at least 6 characters");
     }
 
     if (password !== password2) {
@@ -45,7 +44,7 @@ const Reset = () => {
       password,
     };
 
-    await dispatch(resetPassword(userData, resetToken));
+    await dispatch(resetPassword({ userData, resetToken }));
   };
   useEffect(() => {
     if (isSuccess && message.includes("Reset Successful")) {

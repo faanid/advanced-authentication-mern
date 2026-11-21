@@ -13,7 +13,6 @@ import {
   RESET,
   sendLoginCode,
 } from "../../redux/features/auth/authSlice";
-import Loader from "../../components/Loader/Loader";
 import { GoogleLogin } from "@react-oauth/google";
 
 const initialState = {
@@ -32,7 +31,7 @@ const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { isLoading, isLoggedIn, isSuccess, message, isError, twoFactor } =
+  const { isLoggedIn, isSuccess, isError, twoFactor } =
     useSelector((state) => state.auth);
 
   const loginUser = async (e) => {
@@ -116,7 +115,7 @@ const Login = () => {
               Login
             </button>
           </form>
-          <Link to="/forget">Forget Password</Link>
+          <Link to="/forgot">Forget Password</Link>
           <span className={styles.register}>
             <Link to="/">Home</Link>
             <p> &nbsp; Don't have an account? &nbsp;</p>
