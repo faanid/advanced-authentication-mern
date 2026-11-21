@@ -155,6 +155,19 @@ const sendLoginCode = asyncHandler(async (req, res) => {
     throw new Error("User not found");
   }
 
+  const existingToken = await Token.findOne({
+    userId: user._id,
+    purpose: "login_otp",
+  });
+
+  if (
+    existingToken &&
+    Date.now() - existingToken.createdAt.getTime() < 60 * 1000
+  ) {
+    res.status(429);
+    throw new Error("Please wait before requesting another login code");
+  }
+
   const loginCode = crypto.randomInt(100000, 1000000).toString();
   const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
 
@@ -251,22 +264,35 @@ const loginWithCode = asyncHandler(async (req, res) => {
     crypto.timingSafeEqual(expectedHash, receivedHash);
 
   if (!isCodeValid) {
-    userToken.attempts += 1;
+    const updatedToken = await Token.findOneAndUpdate(
+      { _id: userToken._id, attempts: { $lt: 5 } },
+      { $inc: { attempts: 1 } },
+      { new: true }
+    );
 
-    if (userToken.attempts >= 5) {
-      await userToken.deleteOne();
-    } else {
-      await userToken.save();
+    if (updatedToken?.attempts >= 5) {
+      await updatedToken.deleteOne();
     }
 
     res.status(401);
     throw new Error("Incorrect login code");
   }
 
+  const consumedToken = await Token.deleteOne({
+    _id: userToken._id,
+    loginToken: userToken.loginToken,
+    expiresAt: { $gt: new Date() },
+    attempts: { $lt: 5 },
+  });
+
+  if (consumedToken.deletedCount !== 1) {
+    res.status(401);
+    throw new Error("Login code is invalid or has already been used");
+  }
+
   const currentUserAgent = req.get("user-agent") || "unknown";
   user.userAgent = [...new Set([...(user.userAgent || []), currentUserAgent])];
   await user.save();
-  await userToken.deleteOne();
 
   const token = generateToken(user._id);
   const isProduction = process.env.NODE_ENV === "production";
