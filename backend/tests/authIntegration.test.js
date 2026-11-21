@@ -4,6 +4,7 @@ const { once } = require("node:events");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const User = require("../models/userModel");
+const { generateToken } = require("../utils");
 const { app } = require("../server");
 
 const mongoUri = process.env.MONGO_URI;
@@ -73,6 +74,28 @@ if (!mongoUri || !jwtSecret) {
   });
 
   test("registration, authentication, profile updates, logout, and password changes work with MongoDB", async () => {
+    const shortPasswordRegistration = await request("/api/users/register", {
+      method: "POST",
+      body: {
+        name: "Short Password",
+        email: "short-password@example.com",
+        password: "Short7!",
+      },
+    });
+
+    assert.equal(shortPasswordRegistration.status, 400);
+
+    const oversizedPasswordRegistration = await request("/api/users/register", {
+      method: "POST",
+      body: {
+        name: "Oversized Password",
+        email: "oversized-password@example.com",
+        password: "a".repeat(73),
+      },
+    });
+
+    assert.equal(oversizedPasswordRegistration.status, 400);
+
     const registration = await request("/api/users/register", {
       method: "POST",
       body: {
@@ -91,6 +114,9 @@ if (!mongoUri || !jwtSecret) {
     assert.equal(registeredUser.role, "subscriber");
     assert.equal(registeredUser.isVerified, false);
     assert.equal("password" in registeredUser, false);
+
+    const userWithoutPassword = await User.findById(registeredUser._id);
+    assert.equal(userWithoutPassword.password, undefined);
 
     let storedUser = await User.findById(registeredUser._id).select("+password");
 
@@ -143,6 +169,27 @@ if (!mongoUri || !jwtSecret) {
     });
 
     assert.equal(deniedAdminList.status, 403);
+
+    const admin = await User.create({
+      name: "Integration Admin",
+      email: "integration-admin@example.com",
+      password: "AdminPassword123",
+      role: "admin",
+      isVerified: true,
+      userAgent: [userAgent],
+    });
+    const adminCookie = `token=${generateToken(admin._id, admin.tokenVersion)}`;
+    const adminUserList = await request("/api/users/getUsers", {
+      cookie: adminCookie,
+    });
+
+    assert.equal(adminUserList.status, 200);
+
+    const listedUsers = await adminUserList.json();
+
+    assert.equal(listedUsers.length, 2);
+    assert.equal(listedUsers.some((user) => "password" in user), false);
+    assert.equal(listedUsers.some((user) => "userAgent" in user), false);
 
     const newDeviceLogin = await request("/api/users/login", {
       method: "POST",
