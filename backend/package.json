@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "backend": "node --watch server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "audit": "npm audit --audit-level=high"
   },
   "engines": {
     "node": ">=20"
