@@ -4,15 +4,13 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const sendEmail = require("../utils/sendEmail");
 const { generateToken, hashToken } = require("../utils/index");
+const { generateLoginCode, hashLoginCode, verifyLoginCode } = require("../utils/authTokens");
 const Token = require("../models/tokenModel");
 const crypto = require("crypto");
 const { OAuth2Client } = require("google-auth-library");
 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-const hashLoginCode = (code) =>
-  crypto.createHmac("sha256", process.env.JWT_SECRET).update(code).digest("hex");
 
 const setAuthCookie = (res, token) => {
   const isProduction = process.env.NODE_ENV === "production";
@@ -163,46 +161,64 @@ const loginUser = asyncHandler(async (req, res) => {
 });
 
 const sendLoginCode = asyncHandler(async (req, res) => {
-  const email = String(req.params.email || "").trim().toLowerCase();
+  const email = String(req.params.email || req.body?.email || "")
+    .trim()
+    .toLowerCase();
+  const genericResponse = {
+    message: "If an eligible account exists, a login code will be sent",
+  };
 
   if (!email) {
-    res.status(400);
-    throw new Error("Email is required");
+    return res.status(200).json(genericResponse);
   }
 
-  const user = await User.findOne({ email });
+  const user = await User.findOne({ email }).select("_id email name role");
 
-  if (!user) {
-    res.status(404);
-    throw new Error("User not found");
+  if (!user || user.role === "suspended") {
+    return res.status(200).json(genericResponse);
   }
 
-  const existingToken = await Token.findOne({
-    userId: user._id,
-    purpose: "login_otp",
-  });
+  const now = new Date();
+  const cooldownBoundary = new Date(now.getTime() - 60 * 1000);
+  const loginCode = generateLoginCode();
+  const loginCodeHash = hashLoginCode(loginCode);
+  const expiresAt = new Date(now.getTime() + 10 * 60 * 1000);
 
-  if (hasRecentToken(existingToken)) {
-    res.status(429);
-    throw new Error("Please wait before requesting another login code");
+  let loginToken;
+
+  try {
+    loginToken = await Token.findOneAndUpdate(
+      {
+        userId: user._id,
+        purpose: "login_otp",
+        $or: [
+          { createdAt: { $lte: cooldownBoundary } },
+          { createdAt: { $exists: false } },
+        ],
+      },
+      {
+        $set: {
+          loginToken: loginCodeHash,
+          attempts: 0,
+          createdAt: now,
+          expiresAt,
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+  } catch (error) {
+    if (error.code === 11000) {
+      return res.status(429).json({
+        message: "Please wait before requesting another login code",
+      });
+    }
+
+    throw error;
   }
-
-  const loginCode = crypto.randomInt(100000, 1000000).toString();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
-
-  await Token.deleteMany({
-    userId: user._id,
-    purpose: "login_otp",
-  });
-
-  const loginToken = await Token.create({
-    userId: user._id,
-    purpose: "login_otp",
-    loginToken: hashLoginCode(loginCode),
-    attempts: 0,
-    createdAt: new Date(),
-    expiresAt,
-  });
 
   try {
     await sendEmail(
@@ -215,14 +231,17 @@ const sendLoginCode = asyncHandler(async (req, res) => {
       loginCode
     );
   } catch (error) {
-    await Token.deleteOne({ _id: loginToken._id });
-    res.status(502);
-    throw new Error("Unable to send the login code");
+    await Token.deleteOne({
+      _id: loginToken._id,
+      loginToken: loginCodeHash,
+    });
+
+    return res.status(502).json({
+      message: "Unable to send the login code",
+    });
   }
 
-  return res.status(200).json({
-    message: `Access code sent to ${user.email}`,
-  });
+  return res.status(200).json(genericResponse);
 });
 
 const getUser = asyncHandler(async (req, res) => {
@@ -246,19 +265,19 @@ const getUser = asyncHandler(async (req, res) => {
 });
 
 const loginWithCode = asyncHandler(async (req, res) => {
-  const email = String(req.params.email || "").trim().toLowerCase();
-  const loginCode = String(req.body.loginCode || "").trim();
+  const email = String(req.params.email || req.body?.email || "")
+    .trim()
+    .toLowerCase();
+  const loginCode = String(req.body?.loginCode || "").trim();
 
-  if (!/^[0-9]{6}$/.test(loginCode)) {
-    res.status(400);
-    throw new Error("A valid six-digit login code is required");
+  if (!email || !/^[0-9]{6}$/.test(loginCode)) {
+    return res.status(401).json({ message: "Invalid email or login code" });
   }
 
   const user = await User.findOne({ email });
 
-  if (!user) {
-    res.status(401);
-    throw new Error("Invalid email or login code");
+  if (!user || user.role === "suspended") {
+    return res.status(401).json({ message: "Invalid email or login code" });
   }
 
   const userToken = await Token.findOne({
@@ -268,42 +287,44 @@ const loginWithCode = asyncHandler(async (req, res) => {
     attempts: { $lt: 5 },
   });
 
-  if (!userToken) {
-    res.status(401);
-    throw new Error("Login code is invalid or expired");
-  }
+  if (!userToken || !verifyLoginCode(loginCode, userToken.loginToken)) {
+    if (userToken) {
+      const updatedToken = await Token.findOneAndUpdate(
+        {
+          _id: userToken._id,
+          userId: user._id,
+          purpose: "login_otp",
+          expiresAt: { $gt: new Date() },
+          attempts: { $lt: 5 },
+        },
+        { $inc: { attempts: 1 } },
+        { new: true }
+      );
 
-  const expectedHash = Buffer.from(userToken.loginToken, "hex");
-  const receivedHash = Buffer.from(hashLoginCode(loginCode), "hex");
-  const isCodeValid =
-    expectedHash.length === receivedHash.length &&
-    crypto.timingSafeEqual(expectedHash, receivedHash);
-
-  if (!isCodeValid) {
-    const updatedToken = await Token.findOneAndUpdate(
-      { _id: userToken._id, attempts: { $lt: 5 } },
-      { $inc: { attempts: 1 } },
-      { new: true }
-    );
-
-    if (updatedToken?.attempts >= 5) {
-      await updatedToken.deleteOne();
+      if (updatedToken?.attempts >= 5) {
+        await Token.deleteOne({
+          _id: updatedToken._id,
+          attempts: { $gte: 5 },
+        });
+      }
     }
 
-    res.status(401);
-    throw new Error("Incorrect login code");
+    return res.status(401).json({ message: "Invalid email or login code" });
   }
 
   const consumedToken = await Token.deleteOne({
     _id: userToken._id,
+    userId: user._id,
+    purpose: "login_otp",
     loginToken: userToken.loginToken,
     expiresAt: { $gt: new Date() },
     attempts: { $lt: 5 },
   });
 
   if (consumedToken.deletedCount !== 1) {
-    res.status(401);
-    throw new Error("Login code is invalid or has already been used");
+    return res.status(401).json({
+      message: "Invalid email or login code",
+    });
   }
 
   const currentUserAgent = req.get("user-agent") || "unknown";
