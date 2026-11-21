@@ -39,7 +39,7 @@ jobs:
 
       - name: Verify no high or critical vulnerabilities remain
         working-directory: backend
-        run: npm audit --audit-level=high
+        run: npm audit
 
       - name: Run backend tests
         working-directory: backend
