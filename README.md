@@ -65,18 +65,23 @@ Create a `.env` file inside `backend/` and configure the variables required by t
 | `MONGO_URI` | MongoDB connection string |
 | `JWT_SECRET` | Secret used to sign and verify session JWTs |
 | `JWT_EXPIRES_IN` | Optional JWT lifetime; defaults to `1d` |
-| `CRYPTR_KEY` | Key used by the current device-verification flow |
 | `GOOGLE_CLIENT_ID` | Google OAuth client ID |
 | `EMAIL_HOST` | SMTP host |
 | `EMAIL_USER` | SMTP username / sender account |
 | `EMAIL_PASS` | SMTP password |
-| `FRONTEND_URL` | Public URL of the frontend, used when creating email links |
+| `FRONTEND_URL` | Public frontend origin, used to create email links and as the default CORS origin |
+| `CORS_ORIGINS` | Optional comma-separated list of allowed frontend origins |
+| `EMAIL_PORT` | Optional SMTP port; defaults to `587` |
+| `EMAIL_REPLY_TO` | Optional reply-to email address; defaults to `EMAIL_USER` |
 
 Create a `.env` file inside `frontend/`:
 
 | Variable | Purpose |
 | --- | --- |
-| `REACT_APP_BACKEND_URL` | Base URL of the backend API, without the trailing `/api/users` path |
+| `REACT_APP_BACKEND_URL` | Backend origin, without the `/api/users` path |
+| `REACT_APP_GOOGLE_CLIENT_ID` | Google OAuth client ID used by the frontend |
+| `REACT_APP_CLOUD_NAME` | Cloudinary cloud name used for profile image uploads |
+| `REACT_APP_UPLOAD_PRESET` | Cloudinary unsigned upload preset used for profile image uploads |
 
 Never commit real credentials, tokens, database URLs, or populated environment files. Use separate credentials for development and deployment.
 
