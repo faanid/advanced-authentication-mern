@@ -23,8 +23,11 @@ const LoginWithCode = () => {
   );
 
   const sendUserLoginCode = async () => {
-    await dispatch(sendLoginCode(email));
-    await dispatch(RESET());
+    try {
+      await dispatch(sendLoginCode(email)).unwrap();
+    } catch (error) {
+      return;
+    }
   };
 
   const loginUserWithCode = async (e) => {
@@ -41,7 +44,6 @@ const LoginWithCode = () => {
   };
 
   useEffect(() => {
-    //some conditions that i wanna to check
     if (isSuccess && isLoggedIn) {
       navigate("/profile");
     }
@@ -69,7 +71,7 @@ const LoginWithCode = () => {
               required
               name="accessCode"
               value={loginCode}
-              onChange={(e) => setLoginCode(e.target.value)}
+              onChange={(e) => setLoginCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
             />
 
             <button type="submit" className="--btn --btn-primary --btn-block">
