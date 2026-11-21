@@ -32,9 +32,48 @@ const buildFrontendUrl = (path) => {
   return process.env.FRONTEND_URL.replace(/\/+$/, "") + path;
 };
 
-const hasRecentToken = (token, cooldownMs = 60 * 1000) => {
-  const createdAt = new Date(token?.createdAt).getTime();
-  return Number.isFinite(createdAt) && Date.now() - createdAt < cooldownMs;
+const issueOneTimeToken = async ({
+  userId,
+  purpose,
+  tokenField,
+  tokenHash,
+  expiresInMs,
+  cooldownMs = 60 * 1000,
+}) => {
+  const now = new Date();
+  const cooldownBoundary = new Date(now.getTime() - cooldownMs);
+
+  try {
+    return await Token.findOneAndUpdate(
+      {
+        userId,
+        purpose,
+        $or: [
+          { createdAt: { $lte: cooldownBoundary } },
+          { createdAt: { $exists: false } },
+        ],
+      },
+      {
+        $set: {
+          [tokenField]: tokenHash,
+          attempts: 0,
+          createdAt: now,
+          expiresAt: new Date(now.getTime() + expiresInMs),
+        },
+      },
+      {
+        new: true,
+        upsert: true,
+        setDefaultsOnInsert: true,
+      }
+    );
+  } catch (error) {
+    if (error.code === 11000) {
+      return null;
+    }
+
+    throw error;
+  }
 };
 
 const clearAuthCookie = (res) => {
@@ -350,37 +389,28 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id);
 
   if (!user) {
-    res.status(404);
-    throw new Error("User not found");
+    return res.status(404).json({ message: "User not found" });
   }
 
   if (user.isVerified) {
     return res.status(200).json({ message: "Account is already verified" });
   }
 
-  const existingToken = await Token.findOne({
-    userId: user._id,
-    purpose: "email_verification",
-  });
-
-  if (hasRecentToken(existingToken)) {
-    res.status(429);
-    throw new Error("Please wait before requesting another verification email");
-  }
-
-  await Token.deleteMany({
-    userId: user._id,
-    purpose: "email_verification",
-  });
-
   const verificationToken = crypto.randomBytes(32).toString("hex");
-  const tokenRecord = await Token.create({
+  const verificationHash = hashToken(verificationToken);
+  const tokenRecord = await issueOneTimeToken({
     userId: user._id,
     purpose: "email_verification",
-    vToken: hashToken(verificationToken),
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+    tokenField: "vToken",
+    tokenHash: verificationHash,
+    expiresInMs: 30 * 60 * 1000,
   });
+
+  if (!tokenRecord) {
+    return res.status(429).json({
+      message: "Please wait before requesting another verification email",
+    });
+  }
 
   try {
     await sendEmail(
@@ -393,9 +423,14 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
       buildFrontendUrl("/verify/" + verificationToken)
     );
   } catch (error) {
-    await Token.deleteOne({ _id: tokenRecord._id });
-    res.status(502);
-    throw new Error("Unable to send the verification email");
+    await Token.deleteOne({
+      _id: tokenRecord._id,
+      vToken: verificationHash,
+    });
+
+    return res.status(502).json({
+      message: "Unable to send the verification email",
+    });
   }
 
   return res.status(200).json({ message: "Verification email sent" });
@@ -403,38 +438,45 @@ const sendVerificationEmail = asyncHandler(async (req, res) => {
 
 const verifyToken = asyncHandler(async (req, res) => {
   const verificationToken = String(req.params.verificationToken || "");
+
+  if (!verificationToken) {
+    return res.status(400).json({ message: "Verification link is invalid or expired" });
+  }
+
+  const verificationHash = hashToken(verificationToken);
   const userToken = await Token.findOne({
     purpose: "email_verification",
-    vToken: hashToken(verificationToken),
+    vToken: verificationHash,
     expiresAt: { $gt: new Date() },
   });
 
   if (!userToken) {
-    res.status(400);
-    throw new Error("Verification link is invalid or expired");
-  }
-
-  const consumedToken = await Token.deleteOne({
-    _id: userToken._id,
-    purpose: "email_verification",
-    expiresAt: { $gt: new Date() },
-  });
-
-  if (consumedToken.deletedCount !== 1) {
-    res.status(400);
-    throw new Error("Verification link has already been used");
+    return res.status(400).json({ message: "Verification link is invalid or expired" });
   }
 
   const user = await User.findById(userToken.userId);
 
   if (!user) {
-    res.status(404);
-    throw new Error("User not found");
+    return res.status(404).json({ message: "User not found" });
   }
 
   if (!user.isVerified) {
     user.isVerified = true;
     await user.save();
+  }
+
+  const consumedToken = await Token.deleteOne({
+    _id: userToken._id,
+    userId: user._id,
+    purpose: "email_verification",
+    vToken: verificationHash,
+    expiresAt: { $gt: new Date() },
+  });
+
+  if (consumedToken.deletedCount !== 1) {
+    return res.status(400).json({
+      message: "Verification link has already been used",
+    });
   }
 
   return res.status(200).json({
@@ -443,7 +485,7 @@ const verifyToken = asyncHandler(async (req, res) => {
 });
 
 const forgotPassword = asyncHandler(async (req, res) => {
-  const email = String(req.body.email || "").trim().toLowerCase();
+  const email = String(req.body?.email || "").trim().toLowerCase();
   const genericMessage =
     "If an account with that email exists, a password reset link will be sent";
 
@@ -457,28 +499,19 @@ const forgotPassword = asyncHandler(async (req, res) => {
     return res.status(200).json({ message: genericMessage });
   }
 
-  const existingToken = await Token.findOne({
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const resetHash = hashToken(resetToken);
+  const tokenRecord = await issueOneTimeToken({
     userId: user._id,
     purpose: "password_reset",
+    tokenField: "rToken",
+    tokenHash: resetHash,
+    expiresInMs: 15 * 60 * 1000,
   });
 
-  if (hasRecentToken(existingToken)) {
+  if (!tokenRecord) {
     return res.status(200).json({ message: genericMessage });
   }
-
-  await Token.deleteMany({
-    userId: user._id,
-    purpose: "password_reset",
-  });
-
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  const tokenRecord = await Token.create({
-    userId: user._id,
-    purpose: "password_reset",
-    rToken: hashToken(resetToken),
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 15 * 60 * 1000),
-  });
 
   try {
     await sendEmail(
@@ -491,9 +524,11 @@ const forgotPassword = asyncHandler(async (req, res) => {
       buildFrontendUrl("/resetPassword/" + resetToken)
     );
   } catch (error) {
-    await Token.deleteOne({ _id: tokenRecord._id });
-    console.error("Password reset email delivery failed:", error.message);
-    return res.status(200).json({ message: genericMessage });
+    await Token.deleteOne({
+      _id: tokenRecord._id,
+      rToken: resetHash,
+    });
+    console.error("Password reset email delivery failed");
   }
 
   return res.status(200).json({ message: genericMessage });
@@ -501,7 +536,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
 const resetPassword = asyncHandler(async (req, res) => {
   const resetToken = String(req.params.resetToken || "");
-  const password = String(req.body.password || "");
+  const password = String(req.body?.password || "");
 
   if (password.length < 6) {
     res.status(400);
@@ -521,7 +556,9 @@ const resetPassword = asyncHandler(async (req, res) => {
 
   const consumedToken = await Token.deleteOne({
     _id: userToken._id,
+    userId: userToken.userId,
     purpose: "password_reset",
+    rToken: hashToken(resetToken),
     expiresAt: { $gt: new Date() },
   });
 

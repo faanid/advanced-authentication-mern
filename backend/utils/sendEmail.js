@@ -8,11 +8,35 @@ const allowedTemplates = new Set([
   "changeRole",
   "forgotPassword",
   "loginCode",
-  "test",
   "verifyEmail",
 ]);
 
 const templateDirectory = path.resolve(__dirname, "../views");
+
+const getTransportOptions = (env = process.env) => {
+  if (!env.EMAIL_HOST || !env.EMAIL_USER || !env.EMAIL_PASS) {
+    throw new Error("Email transport configuration is incomplete");
+  }
+
+  const port = env.EMAIL_PORT === undefined || env.EMAIL_PORT === ""
+    ? 587
+    : Number(env.EMAIL_PORT);
+
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error("EMAIL_PORT must be a valid TCP port");
+  }
+
+  return {
+    host: env.EMAIL_HOST,
+    port,
+    secure: port === 465,
+    auth: {
+      user: env.EMAIL_USER,
+      pass: env.EMAIL_PASS,
+    },
+    ...(port === 465 ? {} : { requireTLS: true }),
+  };
+};
 
 const sendEmail = async (
   subject,
@@ -23,10 +47,6 @@ const sendEmail = async (
   name,
   link
 ) => {
-  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("Email transport configuration is incomplete");
-  }
-
   if (!allowedTemplates.has(template)) {
     throw new Error("Unsupported email template");
   }
@@ -40,17 +60,7 @@ const sendEmail = async (
   const render = Handlebars.compile(templateSource);
   const html = render({ name, link });
 
-  const port = Number(process.env.EMAIL_PORT) || 587;
-  const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST,
-    port,
-    secure: port === 465,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-    ...(port === 587 ? { requireTLS: true } : {}),
-  });
+  const transporter = nodemailer.createTransport(getTransportOptions());
 
   try {
     return await transporter.sendMail({
@@ -66,3 +76,4 @@ const sendEmail = async (
 };
 
 module.exports = sendEmail;
+module.exports.getTransportOptions = getTransportOptions;
