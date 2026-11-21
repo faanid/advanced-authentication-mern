@@ -13,11 +13,11 @@ function PageMenu() {
           <li>
             <NavLink to="/changePassword">Change Password</NavLink>
           </li>
-          <AdminAuthorLink>
+          <AdminOnlyLink>
             <li>
               <NavLink to="/users">Users</NavLink>
             </li>
-          </AdminAuthorLink>
+          </AdminOnlyLink>
         </ul>
       </nav>
     </div>
