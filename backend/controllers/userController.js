@@ -2,7 +2,6 @@ const asyncHandler = require("express-async-handler");
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-var parser = require("ua-parser-js");
 const sendEmail = require("../utils/sendEmail");
 const { generateToken, hashToken } = require("../utils/index");
 const Token = require("../models/tokenModel");
@@ -38,9 +37,7 @@ const registerUser = asyncHandler(async (req, res) => {
   }
 
   // Get UserAgent
-  const ua = parser(req.header["user-agent"]);
-  // console.log(ua);
-  const userAgent = [ua.ua];
+  const userAgent = [req.get("user-agent") || "unknown"];
 
   // Create New User
   const user = await User.create({
@@ -107,9 +104,7 @@ const loginUser = asyncHandler(async (req, res) => {
   }
 
   // Trigger 2FA for  unknown UserAgent
-  const ua = parser(req.header["user-agent"]);
-  const thisUserAgent = ua.ua;
-  console.log(thisUserAgent);
+  const thisUserAgent = req.get("user-agent") || "unknown";
   const allowedAgent = user.userAgent.includes(thisUserAgent);
 
   if (!allowedAgent) {
@@ -274,8 +269,7 @@ const loginWithCode = asyncHandler(async (req, res) => {
     throw new Error("Incorrect login code, please tyr again");
   } else {
     // Register userAgent
-    const ua = parser(req.header["user-agent"]);
-    const thisUserAgent = ua.ua;
+    const thisUserAgent = req.get("user-agent") || "unknown";
     user.userAgent.push(thisUserAgent);
     await user.save();
 
@@ -674,9 +668,7 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
   const password = Date.now() + sub;
 
   // Get UserAgent
-  const ua = parser(req.header["user-agent"]);
-  // console.log(ua);
-  const userAgent = [ua.ua];
+  const userAgent = [req.get("user-agent") || "unknown"];
 
   // Check if user exists
   const user = await User.findOne({ email });
