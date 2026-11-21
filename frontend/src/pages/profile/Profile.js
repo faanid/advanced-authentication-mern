@@ -1,18 +1,15 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Card from "../../components/card/Card";
-import profileImg from "../../assets/avatarr.png";
 import "./Profile.scss";
 import PageMenu from "../../components/pageMenu/PageMenu";
 import useRedirectLoggedOutUSer from "../../customHook/useRedirectLoggedOutUser";
 import { useDispatch, useSelector } from "react-redux";
 import {
   getUser,
-  selectIsLoggedIn,
   selectUser,
   updateUser,
 } from "../../redux/features/auth/authSlice";
 import Loader from "../../components/Loader/Loader";
-import UserStats from "../../components/userStats/UserStats";
 import { toast } from "react-toastify";
 import Notification from "../../components/notification/Notification";
 
@@ -30,7 +27,7 @@ export const shortenText = (text, n) => {
 function Profile() {
   useRedirectLoggedOutUSer("/login");
   const dispatch = useDispatch();
-  const { isLoading, isLoggedIn, isSuccess, message, user } = useSelector(
+  const { isLoading, user } = useSelector(
     (state) => state.auth
   );
   const initialState = {
@@ -55,6 +52,16 @@ function Profile() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast.error("Please select a JPEG, PNG, or WebP image");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size must be 5 MB or less");
+      return;
+    }
+
     setProfileImage(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -74,19 +81,25 @@ function Profile() {
           profileImage.type === "image/jpg" ||
           profileImage.type === "image/png")
       ) {
+        if (!cloud_name || !upload_preset) {
+          throw new Error("Cloudinary upload configuration is missing");
+        }
+
         const image = new FormData();
         image.append("file", profileImage);
-        image.append("cloud_name", cloud_name);
         image.append("upload_preset", upload_preset);
 
-        // Save image to Cloudinary
         const response = await fetch(
-          "https://api.cloudinary.com/v1_1/johndoe/image/upload", //change to your url
-          { method: "post", body: image }
+          "https://api.cloudinary.com/v1_1/" + cloud_name + "/image/upload",
+          { method: "POST", body: image }
         );
         const imgData = await response.json();
-        console.log(imgData);
-        imageURL = imgData.url.toString();
+
+        if (!response.ok || !imgData.secure_url) {
+          throw new Error(imgData.error?.message || "Image upload failed");
+        }
+
+        imageURL = imgData.secure_url;
       }
       // Save profile to MongoD
       const userData = {
@@ -96,26 +109,37 @@ function Profile() {
         photo: profileImage ? imageURL : profile.photo,
       };
 
-      dispatch(updateUser(userData));
+      const updatedUser = await dispatch(updateUser(userData)).unwrap();
+      setProfile((currentProfile) => ({ ...currentProfile, ...updatedUser }));
+      setProfileImage(null);
+      setImagePreview(null);
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  useLayoutEffect(() => {
-    if (user) {
-      setProfile({
-        ...profile,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        photo: user.photo,
-        bio: user.bio,
-        role: user.role,
-        isVerified: user.isVerified,
-      });
-    }
+  useEffect(() => {
+    if (!user) return;
+
+    setProfile((currentProfile) => ({
+      ...currentProfile,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      photo: user.photo,
+      bio: user.bio,
+      role: user.role,
+      isVerified: user.isVerified,
+    }));
   }, [user]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   return (
     <>
