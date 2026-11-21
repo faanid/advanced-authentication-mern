@@ -15,7 +15,15 @@ const hashLoginCode = (code) =>
   crypto.createHmac("sha256", process.env.JWT_SECRET).update(code).digest("hex");
 
 const setAuthCookie = (res, token) => {
-  setAuthCookie(res, token);
+  const isProduction = process.env.NODE_ENV === "production";
+
+  res.cookie("token", token, {
+    path: "/",
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+    sameSite: isProduction ? "none" : "lax",
+    secure: isProduction,
+  });
 };
 
 const clearAuthCookie = (res) => {
