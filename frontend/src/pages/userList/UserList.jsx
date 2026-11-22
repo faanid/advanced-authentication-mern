@@ -7,9 +7,9 @@ import Search from "../../components/search/Search";
 import { FaTrashAlt } from "react-icons/fa";
 import ChangeRole from "../../components/ChangeRole/ChangeRole";
 import { useDispatch, useSelector } from "react-redux";
-import useRedirectLoggedOutUSer from "../../customHook/useRedirectLoggedOutUser";
+import useRedirectLoggedOutUser from "../../hooks/useRedirectLoggedOutUser";
 import { deleteUsers, getUsers } from "../../redux/features/auth/authSlice";
-import { shortenText } from "../profile/Profile";
+import { shortenText } from "../../utils/formatText";
 import { Spinner } from "../../components/Loader/Loader";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
@@ -20,7 +20,7 @@ import {
 import ReactPaginate from "react-paginate";
 
 function UserList() {
-  useRedirectLoggedOutUSer("/login");
+  useRedirectLoggedOutUser("/login");
 
   const [search, setSearch] = useState("");
   const [itemOffset, setItemOffset] = useState(0);
