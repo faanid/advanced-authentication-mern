@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FaCheck } from "react-icons/fa";
 import { toast } from "react-toastify";
 import { useDispatch } from "react-redux";
-import { getUsers, upgradeUser } from "../../redux/features/auth/authSlice";
+import { upgradeUser } from "../../redux/features/users/usersSlice";
 import {
   EMAIL_RESET,
   sendAutomatedEmail,
@@ -30,7 +30,6 @@ function ChangeRole({ _id }) {
       }
 
       setUserRole("");
-      await dispatch(getUsers());
       await dispatch(sendAutomatedEmail({ id: _id, role: userRole }));
     } finally {
       dispatch(EMAIL_RESET());
