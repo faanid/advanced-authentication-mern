@@ -3,32 +3,26 @@ import { describe, expect, it } from "vitest";
 import { configureStore } from "@reduxjs/toolkit";
 import { Provider } from "react-redux";
 import { renderToString } from "react-dom/server";
-import authReducer from "../../redux/features/auth/authSlice";
 import {
   AdminOnlyLink,
   ShowOnLogin,
   ShowOnLogout,
 } from "./hiddenLink";
 
-const createStore = (isLoggedIn, role) => {
-  const initialState = authReducer(undefined, { type: "test/init" });
+const authReducer = (state = { isLoggedIn: false, user: null }) => state;
 
-  return configureStore({
+const renderLinks = (isLoggedIn, role) => {
+  const store = configureStore({
     reducer: {
       auth: authReducer,
     },
     preloadedState: {
       auth: {
-        ...initialState,
         isLoggedIn,
         user: role ? { role } : null,
       },
     },
   });
-};
-
-const renderLinks = (isLoggedIn, role) => {
-  const store = createStore(isLoggedIn, role);
 
   return renderToString(
     <Provider store={store}>
