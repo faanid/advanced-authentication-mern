@@ -13,7 +13,7 @@ import {
   register,
   sendVerificationEmail,
 } from "../../redux/features/auth/authSlice";
-import Loader from "../../components/Loader/Loader";
+import Loader from "../../components/loader/Loader";
 
 const initialState = {
   name: "",
