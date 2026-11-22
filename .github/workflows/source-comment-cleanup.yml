@@ -1,0 +1,97 @@
+name: Source comment cleanup
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/**"
+      - "scripts/**"
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup-and-verify:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\").ok'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      MONGO_URI: mongodb://127.0.0.1:27017/advanced_auth_test
+      JWT_SECRET: cleanup-test-secret-with-sufficient-entropy
+      FRONTEND_URL: http://localhost:3000
+    steps:
+      - name: Check out pull request branch
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install temporary source parser
+        run: npm install --no-save --package-lock=false --prefix frontend @babel/parser@7.29.14
+
+      - name: Remove source comments
+        run: node scripts/strip-source-comments.js
+
+      - name: Verify no source comments remain
+        run: node scripts/strip-source-comments.js --check
+
+      - name: Check JavaScript syntax
+        run: find backend frontend/src scripts -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.mjs" -o -name "*.cjs" \) -print0 | xargs -0 -n 1 node --check
+
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_BACKEND_URL: https://example.invalid
+          VITE_GOOGLE_CLIENT_ID: test-client-id
+        run: npm run build
+
+      - name: Verify patch formatting
+        run: git diff --check
+
+      - name: Commit cleaned source files
+        run: |
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add backend frontend/src frontend/public .github/workflows scripts
+            git commit -m "chore: remove source comments"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          fi
