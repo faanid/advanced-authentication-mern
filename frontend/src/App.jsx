@@ -33,6 +33,9 @@ function App() {
 
   useEffect(() => {
     dispatch(getLoginStatus());
+  }, [dispatch]);
+
+  useEffect(() => {
     if (isLoggedIn && user === null) {
       dispatch(getUser());
     }

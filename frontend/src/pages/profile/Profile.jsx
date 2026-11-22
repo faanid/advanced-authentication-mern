@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import Card from "../../components/card/Card";
 import "./Profile.scss";
 import PageMenu from "../../components/pageMenu/PageMenu";
-import useRedirectLoggedOutUSer from "../../customHook/useRedirectLoggedOutUser";
+import useRedirectLoggedOutUser from "../../hooks/useRedirectLoggedOutUser";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  getUser,
-  selectUser,
   updateUser,
 } from "../../redux/features/auth/authSlice";
 import Loader from "../../components/Loader/Loader";
@@ -16,16 +14,8 @@ import Notification from "../../components/notification/Notification";
 const cloud_name = import.meta.env.VITE_CLOUD_NAME;
 const upload_preset = import.meta.env.VITE_UPLOAD_PRESET;
 
-export const shortenText = (text, n) => {
-  if (text.length > n) {
-    const shortenendText = text.substring(0, n).concat("...");
-    return shortenendText;
-  }
-  return text;
-};
-
 function Profile() {
-  useRedirectLoggedOutUSer("/login");
+  useRedirectLoggedOutUser("/login");
   const dispatch = useDispatch();
   const { isLoading, user } = useSelector(
     (state) => state.auth
@@ -42,10 +32,6 @@ function Profile() {
   const [profile, setProfile] = useState(initialState);
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-
-  useEffect(() => {
-    dispatch(getUser());
-  }, [dispatch]);
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -143,7 +129,7 @@ function Profile() {
   return (
     <>
       {isLoading && <Loader />}
-      {!profile.isVerified && <Notification />}
+      {user && !user.isVerified && <Notification />}
       <section>
         <div className="container">
           <PageMenu />
@@ -222,12 +208,5 @@ function Profile() {
     </>
   );
 }
-
-export const UserName = () => {
-  const user = useSelector(selectUser);
-
-  const username = user?.name || "...";
-  return <p className="--color-white">Hi, {shortenText(username, 9)} |</p>;
-};
 
 export default Profile;

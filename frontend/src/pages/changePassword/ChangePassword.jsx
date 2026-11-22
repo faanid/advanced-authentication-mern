@@ -7,13 +7,14 @@ import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import useRedirectLoggedOutUSer from "../../customHook/useRedirectLoggedOutUser";
+import useRedirectLoggedOutUser from "../../hooks/useRedirectLoggedOutUser";
 import {
   changePassword,
   logout,
   RESET,
 } from "../../redux/features/auth/authSlice";
 import { Spinner } from "../../components/Loader/Loader";
+import { validatePassword } from "../../utils/authValidation";
 
 const initialState = {
   oldPassword: "",
@@ -22,11 +23,11 @@ const initialState = {
 };
 
 const ChangePassword = () => {
-  useRedirectLoggedOutUSer("/login");
+  useRedirectLoggedOutUser("/login");
   const [formData, setFormData] = useState(initialState);
   const { oldPassword, password2, password } = formData;
 
-  const { isLoading } = useSelector((state) => state.auth);
+  const { isLoading, user } = useSelector((state) => state.auth);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -65,71 +66,66 @@ const ChangePassword = () => {
   };
 
   return (
-    <>
-      <section>
-        <div className="container">
-          <PageMenu />
-          <h2>Change Password</h2>
-          <div className="--flex-start change-password">
-            <Card cardClass={"card"}>
-              <>
-                <div className="profile-photo">
-                  <div>
-                    <img src={profileImg} alt="Profileimg" />
-                    <h3>Role: Subscriber</h3>
-                  </div>
-                </div>
-                <form onSubmit={updatePassword}>
-                  <p>
-                    <label>Current Password</label>
-                    <PasswordInput
-                      placeholder="Old assword"
-                      name="oldPassword"
-                      value={oldPassword}
-                      onChange={handleInputChange}
-                      maxLength={72}
-                    />
-                  </p>
-                  <p>
-                    <label>New Password:</label>
-                    <PasswordInput
-                      placeholder="Password"
-                      name="password"
-                      value={password}
-                      onChange={handleInputChange}
-                      minLength={8}
-                      maxLength={72}
-                    />
-                  </p>
-                  <p>
-                    <label>confirm New Password:</label>
-                    <PasswordInput
-                      placeholder="Confirm Password"
-                      name="password2"
-                      value={password2}
-                      onChange={handleInputChange}
-                      minLength={8}
-                      maxLength={72}
-                    />
-                  </p>
-
-                  {isLoading ? (
-                    <Spinner />
-                  ) : (
-                    <button
-                      type="submit"
-                      className="--btn --btn-danger --btn-block"
-                    >
-                      Change Password
-                    </button>
-                  )}
-                </form>
-              </>
-            </Card>
-          </div>
+    <section>
+      <div className="container">
+        <PageMenu />
+        <h2>Change Password</h2>
+        <div className="--flex-start change-password">
+          <Card cardClass="card">
+            <div className="profile-photo">
+              <div>
+                <img src={user?.photo || profileImg} alt="Profile" />
+                <h3>Role: {user?.role || "subscriber"}</h3>
+              </div>
+            </div>
+            <form onSubmit={updatePassword}>
+              <p>
+                <label>Current Password</label>
+                <PasswordInput
+                  placeholder="Current password"
+                  name="oldPassword"
+                  value={oldPassword}
+                  onChange={handleInputChange}
+                  maxLength={72}
+                />
+              </p>
+              <p>
+                <label>New Password:</label>
+                <PasswordInput
+                  placeholder="Password"
+                  name="password"
+                  value={password}
+                  onChange={handleInputChange}
+                  minLength={8}
+                  maxLength={72}
+                />
+              </p>
+              <p>
+                <label>Confirm New Password:</label>
+                <PasswordInput
+                  placeholder="Confirm Password"
+                  name="password2"
+                  value={password2}
+                  onChange={handleInputChange}
+                  minLength={8}
+                  maxLength={72}
+                />
+              </p>
+              {isLoading ? (
+                <Spinner />
+              ) : (
+                <button
+                  type="submit"
+                  className="--btn --btn-danger --btn-block"
+                >
+                  Change Password
+                </button>
+              )}
+            </form>
+          </Card>
         </div>
-      </section>
-    </>
+      </div>
+    </section>
   );
 };
 
