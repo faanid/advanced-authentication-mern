@@ -13,7 +13,7 @@ import {
   logout,
   RESET,
 } from "../../redux/features/auth/authSlice";
-import { Spinner } from "../../components/Loader/Loader";
+import { Spinner } from "../../components/loader/Loader";
 import { validatePassword } from "../../utils/authValidation";
 
 const initialState = {

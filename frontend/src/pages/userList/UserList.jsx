@@ -5,12 +5,12 @@ import PageMenu from "../../components/pageMenu/PageMenu";
 import UserStats from "../../components/userStats/UserStats";
 import Search from "../../components/search/Search";
 import { FaTrashAlt } from "react-icons/fa";
-import ChangeRole from "../../components/ChangeRole/ChangeRole";
+import ChangeRole from "../../components/changeRole/ChangeRole";
 import { useDispatch, useSelector } from "react-redux";
 import useRedirectLoggedOutUser from "../../hooks/useRedirectLoggedOutUser";
 import { deleteUsers, getUsers } from "../../redux/features/auth/authSlice";
 import { shortenText } from "../../utils/formatText";
-import { Spinner } from "../../components/Loader/Loader";
+import { Spinner } from "../../components/loader/Loader";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
 import {

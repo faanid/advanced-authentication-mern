@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   updateUser,
 } from "../../redux/features/auth/authSlice";
-import Loader from "../../components/Loader/Loader";
+import Loader from "../../components/loader/Loader";
 import { toast } from "react-toastify";
 import Notification from "../../components/notification/Notification";
 

@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { forgotPassword, RESET } from "../../redux/features/auth/authSlice";
 import { validateEmail } from "../../redux/features/auth/authService";
 import { toast } from "react-toastify";
-import Loader from "../../components/Loader/Loader";
+import Loader from "../../components/loader/Loader";
 
 const Forgot = () => {
   const [email, setEmail] = useState("");

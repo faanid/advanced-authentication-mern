@@ -10,7 +10,7 @@ import {
   RESET,
   sendLoginCode,
 } from "../../redux/features/auth/authSlice";
-import Loader from "../../components/Loader/Loader";
+import Loader from "../../components/loader/Loader";
 import {
   isValidLoginCode,
   sanitizeLoginCode,

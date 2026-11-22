@@ -2,7 +2,7 @@ import React from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { RESET, verifyUser } from "../../redux/features/auth/authSlice";
-import Loader from "../../components/Loader/Loader";
+import Loader from "../../components/loader/Loader";
 
 const Verify = () => {
   const dispatch = useDispatch();
