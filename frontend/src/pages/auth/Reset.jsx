@@ -4,7 +4,7 @@ import { MdPassword } from "react-icons/md";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
-import Loader from "../../components/Loader/Loader";
+import Loader from "../../components/loader/Loader";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { RESET, resetPassword } from "../../redux/features/auth/authSlice";
