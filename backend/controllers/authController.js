@@ -18,6 +18,7 @@ const {
   setAuthCookie,
   buildFrontendUrl,
   clearAuthCookie,
+  rememberUserAgent,
 } = require("../utils/authHelpers");
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -295,8 +296,10 @@ const loginWithCode = asyncHandler(async (req, res) => {
   }
 
   const currentUserAgent = req.get("user-agent") || "unknown";
-  user.userAgent = [...new Set([...(user.userAgent || []), currentUserAgent])];
-  await user.save();
+
+  if (rememberUserAgent(user, currentUserAgent)) {
+    await user.save();
+  }
 
   const token = generateToken(user._id, user.tokenVersion);
   setAuthCookie(res, token);
@@ -403,6 +406,17 @@ const loginWithGoogle = asyncHandler(async (req, res) => {
   } else if (user.role === "suspended") {
     res.status(403);
     throw new Error("User suspended, please contact support");
+  } else {
+    const verificationChanged = !user.isVerified;
+    const userAgentChanged = rememberUserAgent(user, userAgent);
+
+    if (verificationChanged) {
+      user.isVerified = true;
+    }
+
+    if (verificationChanged || userAgentChanged) {
+      await user.save();
+    }
   }
 
   const token = generateToken(user._id, user.tokenVersion);

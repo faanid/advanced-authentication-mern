@@ -26,7 +26,8 @@ const userSchema = new mongoose.Schema(
       maxlength: [72, "Password must not exceed 72 characters"],
       select: false,
       validate: {
-        validator: (value) => Buffer.byteLength(value, "utf8") <= 72,
+        validator: (value) =>
+          typeof value === "string" && Buffer.byteLength(value, "utf8") <= 72,
         message: "Password must not exceed 72 UTF-8 bytes",
       },
     },
