@@ -107,6 +107,7 @@ const Login = () => {
               name="password"
               value={password}
               onChange={handleInputChange}
+              maxLength={72}
             />
             
             <button type="submit" className="--btn --btn-primary --btn-block">

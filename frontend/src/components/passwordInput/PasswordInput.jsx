@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import "./PasswordInput.scss";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 
-const PasswordInput = ({ placeholder, value, onChange, name, onPaste }) => {
+const PasswordInput = ({ placeholder, value, onChange, name, onPaste, minLength, maxLength }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const togglePassword = () => {
@@ -20,6 +20,8 @@ const PasswordInput = ({ placeholder, value, onChange, name, onPaste }) => {
         value={value}
         onChange={onChange}
         onPaste={onPaste}
+        minLength={minLength}
+        maxLength={maxLength}
       />
       <div className="icon" onClick={togglePassword}>
         {showPassword ? (

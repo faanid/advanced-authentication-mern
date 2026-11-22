@@ -3,6 +3,7 @@ import {
   isValidLoginCode,
   sanitizeLoginCode,
   validateEmail,
+  validatePassword,
 } from "./authValidation";
 
 describe("validateEmail", () => {
@@ -38,5 +39,24 @@ describe("isValidLoginCode", () => {
     expect(isValidLoginCode("12345")).toBe(false);
     expect(isValidLoginCode("12345a")).toBe(false);
     expect(isValidLoginCode("")).toBe(false);
+  });
+});
+
+describe("validatePassword", () => {
+  it("accepts passwords with at least eight characters within bcrypt's byte limit", () => {
+    expect(validatePassword("Password123")).toBe(true);
+  });
+
+  it("rejects short passwords", () => {
+    expect(validatePassword("Short7!")).toBe(false);
+  });
+
+  it("rejects passwords longer than bcrypt's 72-byte input limit", () => {
+    expect(validatePassword("a".repeat(73))).toBe(false);
+    expect(validatePassword("😀".repeat(19))).toBe(false);
+  });
+
+  it("rejects non-string values", () => {
+    expect(validatePassword(null)).toBe(false);
   });
 });

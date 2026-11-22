@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { TiUserAddOutline } from "react-icons/ti";
-import { FaTimes } from "react-icons/fa";
-import { BsCheck2All } from "react-icons/bs";
 import styles from "./auth.module.scss";
 import Card from "../../components/card/Card";
 import PasswordInput from "../../components/passwordInput/PasswordInput";
 import { toast } from "react-toastify";
 import { validateEmail } from "../../redux/features/auth/authService";
+import { validatePassword } from "../../utils/authValidation";
 import { useDispatch, useSelector } from "react-redux";
 import {
   RESET,
@@ -34,49 +33,10 @@ const Register = () => {
     (state) => state.auth
   );
 
-  const [uCase, setUCase] = useState(false);
-  const [num, setNum] = useState(false);
-  const [sChar, setSChar] = useState(false);
-  const [passLength, setPassLength] = useState(false);
-
-  const timeIcon = <FaTimes color="red" size={15} />;
-  const checkIcon = <BsCheck2All color="green" size={15} />;
-
-  const switchIcon = (condition) => {
-    if (condition) {
-      return checkIcon;
-    } else {
-      return timeIcon;
-    }
-  };
-
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-
-  useEffect(() => {
-    if (password.match(/([a-z].*[A-Z])|([A-Z].*[a-z])/)) {
-      setUCase(true);
-    } else {
-      setUCase(false);
-    }
-    if (password.match(/([0-9])/)) {
-      setNum(true);
-    } else {
-      setNum(false);
-    }
-    if (password.match(/([!,%,&,@,#,$,^,*,?,_,~])/)) {
-      setSChar(true);
-    } else {
-      setSChar(false);
-    }
-    if (password.length > 5) {
-      setPassLength(true);
-    } else {
-      setPassLength(false);
-    }
-  }, [password]);
 
   const registerUser = async (e) => {
     e.preventDefault();
@@ -84,8 +44,8 @@ const Register = () => {
     if (!name || !email || !password) {
       return toast.error("All fields are required");
     }
-    if (password.length < 6) {
-      return toast.error("Password must be at least 6 characters");
+    if (!validatePassword(password)) {
+      return toast.error("Use at least 8 characters and stay within the 72-byte password limit");
     }
     if (!validateEmail(email)) {
       return toast.error("Please enter a valid email");
@@ -142,42 +102,22 @@ const Register = () => {
               name="password"
               value={password}
               onChange={handleInputChange}
+              minLength={8}
+              maxLength={72}
             />
             <PasswordInput
               placeholder="Confirm Password"
               name="password2"
               value={password2}
               onChange={handleInputChange}
-              onPaste={(e) => {
-                e.preventDefault();
-                toast.error("Cannot pase into input field");
-                return false;
-              }}
+              minLength={8}
+              maxLength={72}
             />
             
             <Card cardClass={styles.group}>
-              <ul className="form-list">
-                <li>
-                  <span className={styles.indicator}>
-                    {switchIcon(uCase)} &nbsp; Lowercase & Uppercase
-                  </span>
-                </li>
-                <li>
-                  <span className={styles.indicator}>
-                    {switchIcon(num)} &nbsp; Number (0-9)
-                  </span>
-                </li>
-                <li>
-                  <span className={styles.indicator}>
-                    {switchIcon(sChar)} &nbsp; pecial Character (!@#$%^&*)
-                  </span>
-                </li>
-                <li>
-                  <span className={styles.indicator}>
-                    {switchIcon(passLength)} &nbsp; At least 6 Characters
-                  </span>
-                </li>
-              </ul>
+              <p className={styles.indicator}>
+                Use at least 8 characters. Passwords are limited to 72 UTF-8 bytes.
+              </p>
             </Card>
             <button type="submit" className="--btn --btn-primary --btn-block">
               Register
