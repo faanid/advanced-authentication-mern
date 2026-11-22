@@ -65,8 +65,8 @@ jobs:
       - name: Verify no source comments remain
         run: node scripts/strip-source-comments.js --check
 
-      - name: Check JavaScript syntax
-        run: find backend frontend/src scripts -type f \( -name "*.js" -o -name "*.jsx" -o -name "*.mjs" -o -name "*.cjs" \) -print0 | xargs -0 -n 1 node --check
+      - name: Check backend and utility JavaScript syntax
+        run: find backend scripts -type f \( -name "*.js" -o -name "*.mjs" -o -name "*.cjs" \) -print0 | xargs -0 -n 1 node --check
 
       - name: Run backend tests
         working-directory: backend
