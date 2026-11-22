@@ -1,5 +1,5 @@
 import axios from "axios";
-import { API_URL } from "../auth/authService";
+import { API_URL } from "../../api/apiConfig";
 
 const sendAutomatedEmail = async (emailData) => {
   const response = await axios.post(API_URL + "sendAutomatedEmail", emailData);
