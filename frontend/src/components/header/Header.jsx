@@ -6,7 +6,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { logout, RESET } from "../../redux/features/auth/authSlice";
 import { ShowOnLogin, ShowOnLogout } from "../protect/hiddenLink";
-import { UserName } from "../../pages/profile/Profile";
+import UserName from "../userName/UserName";
 
 const activeLink = ({ isActive }) => (isActive ? "active" : "");
 
