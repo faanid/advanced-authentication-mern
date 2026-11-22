@@ -1,8 +1,7 @@
-const { useSelector } = require("react-redux");
-const {
-  selectIsLoggedIn,
-  selectUser,
-} = require("../../redux/features/auth/authSlice");
+import { useSelector } from "react-redux";
+
+const selectIsLoggedIn = (state) => state.auth.isLoggedIn;
+const selectUser = (state) => state.auth.user;
 
 export const ShowOnLogin = ({ children }) => {
   const isLoggedIn = useSelector(selectIsLoggedIn);
@@ -10,6 +9,7 @@ export const ShowOnLogin = ({ children }) => {
   if (isLoggedIn) {
     return <>{children}</>;
   }
+
   return null;
 };
 
@@ -19,6 +19,7 @@ export const ShowOnLogout = ({ children }) => {
   if (!isLoggedIn) {
     return <>{children}</>;
   }
+
   return null;
 };
 
@@ -29,5 +30,6 @@ export const AdminOnlyLink = ({ children }) => {
   if (isLoggedIn && user?.role === "admin") {
     return <>{children}</>;
   }
+
   return null;
 };
