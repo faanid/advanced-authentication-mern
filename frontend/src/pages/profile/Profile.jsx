@@ -15,7 +15,7 @@ const cloud_name = import.meta.env.VITE_CLOUD_NAME;
 const upload_preset = import.meta.env.VITE_UPLOAD_PRESET;
 
 function Profile() {
-  useRedirectLoggedOutUSer("/login");
+  useRedirectLoggedOutUser("/login");
   const dispatch = useDispatch();
   const { isLoading, user } = useSelector(
     (state) => state.auth
