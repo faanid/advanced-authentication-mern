@@ -6,14 +6,11 @@ const initialState = {
   isLoggedIn: false,
   authChecked: false,
   user: null,
-  users: [],
   twoFactor: false,
   isError: false,
   isSuccess: false,
   isLoading: false,
   message: "",
-  verifiedUsers: 0,
-  suspendedUsers: 0,
 };
 
 export const register = createAsyncThunk(
@@ -196,55 +193,6 @@ export const resetPassword = createAsyncThunk(
     }
   }
 );
-export const getUsers = createAsyncThunk(
-  "auth/getUsers",
-  async (_, thunkAPI) => {
-    try {
-      return await authService.getUsers();
-    } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
-    }
-  }
-);
-export const deleteUsers = createAsyncThunk(
-  "auth/deleteUsers",
-  async (id, thunkAPI) => {
-    try {
-      return await authService.deleteUsers(id);
-    } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
-    }
-  }
-);
-export const upgradeUser = createAsyncThunk(
-  "auth/upgradeUser",
-  async (userData, thunkAPI) => {
-    try {
-      return await authService.upgradeUser(userData);
-    } catch (error) {
-      const message =
-        (error.response &&
-          error.response.data &&
-          error.response.data.message) ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
-    }
-  }
-);
-
 export const sendLoginCode = createAsyncThunk(
   "auth/sendLoginCode",
   async (email, thunkAPI) => {
@@ -304,14 +252,6 @@ const authSlice = createSlice({
       state.isSuccess = false;
       state.isLoading = false;
       state.message = "";
-    },
-    CALC_VERIFIED_USER(state) {
-      state.verifiedUsers = state.users.filter((user) => user.isVerified).length;
-    },
-    CALC_SUSPENDED_USER(state) {
-      state.suspendedUsers = state.users.filter(
-        (user) => user.role === "suspended"
-      ).length;
     },
   },
 
@@ -506,50 +446,6 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      .addCase(getUsers.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(getUsers.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.users = action.payload;
-      })
-      .addCase(getUsers.rejected, (state, action) => {
-        state.isLoading = false;
-        state.message = action.payload;
-        state.isError = true;
-        toast.error(action.payload);
-      })
-      .addCase(deleteUsers.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(deleteUsers.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.message = action.payload;
-        toast.success(action.payload);
-      })
-      .addCase(deleteUsers.rejected, (state, action) => {
-        state.isLoading = false;
-        state.message = action.payload;
-        state.isError = true;
-        toast.error(action.payload);
-      })
-      .addCase(upgradeUser.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(upgradeUser.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.message = action.payload;
-        toast.success(action.payload);
-      })
-      .addCase(upgradeUser.rejected, (state, action) => {
-        state.isLoading = false;
-        state.message = action.payload;
-        state.isError = true;
-        toast.error(action.payload);
-      })
       .addCase(sendLoginCode.pending, (state) => {
         state.isLoading = true;
       })
@@ -605,8 +501,7 @@ const authSlice = createSlice({
   },
 });
 
-export const { RESET, CALC_SUSPENDED_USER, CALC_VERIFIED_USER } =
-  authSlice.actions;
+export const { RESET } = authSlice.actions;
 
 export const selectIsLoggedIn = (state) => state.auth.isLoggedIn;
 export const selectAuthChecked = (state) => state.auth.authChecked;
