@@ -1,8 +1,8 @@
 # Advanced Authentication (MERN)
 
-A practice project for building an authentication and account-management application with a React client, an Express API, and MongoDB.
+A learning and portfolio project for an authentication and account-management application built with a React client, an Express API, and MongoDB.
 
-The repository is being actively repaired and refactored. Some authentication flows and API contracts are currently incomplete or inconsistent, so the feature list below describes the project's intended scope rather than a claim that every flow is production-ready.
+The project implements the core authentication flows described below and is maintained through focused refactors and automated checks. It is intended for education and demonstration, not as a production-ready identity provider.
 
 ## Project scope
 
@@ -10,9 +10,10 @@ The repository is being actively repaired and refactored. Some authentication fl
 - Google OAuth sign-in
 - User profile management
 - Email verification and password reset
-- Device-aware login verification (two-factor-style flow)
-- Role-based access for subscribers, authors, and administrators
+- New-device login verification using one-time codes
+- Role-based access for subscribers, authors, administrators, and suspended accounts
 - Administrative user management
+- Session revocation after logout, password changes, and role changes
 
 ## Technology
 
@@ -21,96 +22,112 @@ The repository is being actively repaired and refactored. Some authentication fl
 | Frontend | React 18, Vite, React Router, Dart Sass |
 | State management | Redux Toolkit, React Redux |
 | HTTP client | Axios |
-| Backend | Node.js, Express |
+| Backend | Node.js 22+, Express |
 | Database | MongoDB, Mongoose |
 | Authentication | JSON Web Tokens, HTTP-only cookies, bcrypt |
 | Email | Nodemailer and Handlebars templates |
 | OAuth | Google OAuth client |
+| Testing | Vitest, Node.js Test Runner, MongoDB integration tests |
 
 ## Repository layout
 
-```text
+\x60\x60\x60text
 .
 ├── backend/
-│   ├── controllers/       # Request handlers
-│   ├── middleware/        # Authentication and error handling
-│   ├── models/            # Mongoose models
-│   ├── routes/            # API routes
-│   ├── utils/             # Shared backend utilities
-│   └── views/             # Email templates
+│   ├── controllers/
+│   │   ├── authController.js
+│   │   ├── emailController.js
+│   │   ├── profileController.js
+│   │   └── adminController.js
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── tests/
+│   ├── utils/
+│   └── views/
 └── frontend/
-    ├── index.html
-    ├── vite.config.js
     ├── public/
+    ├── index.html
+    ├── vite.config.mjs
     └── src/
         ├── components/
+        ├── hooks/
         ├── pages/
-        └── redux/
-```
+        ├── redux/
+        │   ├── api/
+        │   └── features/
+        │       ├── auth/
+        │       ├── email/
+        │       └── users/
+        └── utils/
+\x60\x60\x60
+
+\x60backend/controllers/userController.js\x60 is a compatibility barrel that re-exports the domain-specific controllers for the existing route definitions.
 
 ## Prerequisites
 
-- Node.js 22.12 or newer for both the backend and frontend.
+- Node.js 22.12 or newer.
 - A MongoDB database, local or hosted.
 - Google OAuth credentials if Google sign-in is enabled.
 - SMTP credentials if email-based flows are enabled.
-
-> **Frontend tooling:** The frontend now uses Vite and Dart Sass. Keep Node.js at version 22.12 or newer to satisfy the Vite/Vitest toolchain.
+- Cloudinary credentials if profile image uploads are enabled.
 
 ## Configuration
 
-Copy `backend/.env.example` to `backend/.env` and configure the values for your environment:
+Copy \x60backend/.env.example\x60 to \x60backend/.env\x60 and configure the values for your environment:
 
 | Variable | Purpose |
 | --- | --- |
-| `PORT` | API server port (defaults to `5000`) |
-| `MONGO_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret used to sign and verify session JWTs |
-| `JWT_EXPIRES_IN` | Optional JWT lifetime; defaults to `1d` |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `EMAIL_HOST` | SMTP host |
-| `EMAIL_USER` | SMTP username / sender account |
-| `EMAIL_PASS` | SMTP password |
-| `FRONTEND_URL` | Public frontend origin, used to create email links and as the default CORS origin |
-| `CORS_ORIGINS` | Optional comma-separated list of allowed frontend origins |
-| `TRUST_PROXY` | Set to `true` only when the API is behind one trusted reverse proxy |
-| `EMAIL_PORT` | Optional SMTP port; defaults to `587` |
-| `EMAIL_REPLY_TO` | Optional reply-to email address; defaults to `EMAIL_USER` |
+| \x60PORT\x60 | API server port (defaults to \x605000\x60) |
+| \x60MONGO_URI\x60 | MongoDB connection string |
+| \x60JWT_SECRET\x60 | Strong secret used to sign and verify session JWTs |
+| \x60JWT_EXPIRES_IN\x60 | Optional JWT lifetime; defaults to \x601d\x60. The session cookie uses the same lifetime. |
+| \x60GOOGLE_CLIENT_ID\x60 | Google OAuth client ID |
+| \x60EMAIL_HOST\x60 | SMTP host |
+| \x60EMAIL_USER\x60 | SMTP username and sender account |
+| \x60EMAIL_PASS\x60 | SMTP password |
+| \x60EMAIL_PORT\x60 | Optional SMTP port; defaults to \x60587\x60 |
+| \x60EMAIL_REPLY_TO\x60 | Optional reply-to address; defaults to \x60EMAIL_USER\x60 |
+| \x60FRONTEND_URL\x60 | Frontend origin used for email links and as the default CORS origin |
+| \x60CORS_ORIGINS\x60 | Optional comma-separated list of allowed frontend origins |
+| \x60TRUST_PROXY\x60 | Set to \x60true\x60 only when the API is behind one trusted reverse proxy |
 
-Copy `frontend/.env.example` to `frontend/.env`:
+Copy \x60frontend/.env.example\x60 to \x60frontend/.env\x60:
 
 | Variable | Purpose |
 | --- | --- |
-| `VITE_BACKEND_URL` | Backend origin, without the `/api/users` path |
-| `VITE_GOOGLE_CLIENT_ID` | Google OAuth client ID used by the frontend |
-| `VITE_CLOUD_NAME` | Cloudinary cloud name used for profile image uploads |
-| `VITE_UPLOAD_PRESET` | Cloudinary unsigned upload preset used for profile image uploads |
+| \x60VITE_BACKEND_URL\x60 | Backend origin, without the \x60/api/users\x60 path |
+| \x60VITE_GOOGLE_CLIENT_ID\x60 | Google OAuth client ID used by the frontend |
+| \x60VITE_CLOUD_NAME\x60 | Cloudinary cloud name for profile image uploads |
+| \x60VITE_UPLOAD_PRESET\x60 | Cloudinary unsigned upload preset for profile image uploads |
 
-Never commit real credentials, tokens, database URLs, or populated environment files. Use separate credentials for development and deployment.
+Values prefixed with \x60VITE_\x60 are included in the browser bundle and are public. Never put private keys, passwords, API secrets, or database credentials in frontend environment variables.
+
+Generate a strong JWT secret rather than reusing a password. Keep all populated environment files out of source control and use separate credentials for development and deployment.
 
 ## Run locally
 
 Install and run the backend:
 
-```bash
+\x60\x60\x60bash
 cd backend
 npm ci
 npm start
-```
+\x60\x60\x60
 
-The API defaults to port `5000`.
+The API defaults to port \x605000\x60.
 
 In a second terminal, install and run the frontend:
 
-```bash
+\x60\x60\x60bash
 cd frontend
 npm ci
-npm start
-```
+npm run dev
+\x60\x60\x60
 
-The Vite development server normally runs on port `3000`. Set `VITE_BACKEND_URL` to the backend origin and ensure the backend CORS allowlist contains the frontend origin. Frontend CI uses Node.js 22 and the committed lockfile.
+The Vite development server normally runs on port \x603000\x60. Set \x60VITE_BACKEND_URL\x60 to the backend origin and ensure the backend CORS allowlist includes the frontend origin.
 
-Use `npm ci` instead of `npm install` when installing from a committed lockfile in a reproducible environment.
+Use \x60npm ci\x60 when installing from the committed lockfiles to get reproducible dependency versions.
 
 ## Available scripts
 
@@ -118,34 +135,40 @@ Use `npm ci` instead of `npm install` when installing from a committed lockfile 
 
 | Command | Description |
 | --- | --- |
-| `npm start` | Start the Express server |
-| `npm run backend` | Restart the server automatically when files change (Node.js watch mode) |
+| \x60npm start\x60 | Start the Express server |
+| \x60npm run backend\x60 | Restart the server automatically when files change |
+| \x60npm test\x60 | Run unit and MongoDB-backed integration tests |
+| \x60npm run audit\x60 | Audit backend dependencies for high-severity vulnerabilities |
 
 ### Frontend
 
 | Command | Description |
 | --- | --- |
-| `npm start` or `npm run dev` | Start the Vite development server |
-| `npm test` | Run Vitest unit tests |
-| `npm run build` | Create a production build in `dist/` |
-| `npm run preview` | Preview the production build locally |
+| \x60npm start\x60 or \x60npm run dev\x60 | Start the Vite development server |
+| \x60npm test\x60 | Run Vitest unit tests |
+| \x60npm run build\x60 | Create a production build in \x60dist/\x60 |
+| \x60npm run preview\x60 | Preview the production build locally |
 
 ## Security notes
 
-- Session cookies should remain `HttpOnly`, and production cookies must use secure transport.
-- Keep JWT, OAuth, SMTP, encryption, and database secrets outside source control.
+- Session cookies are \x60HttpOnly\x60; production cookies use \x60Secure\x60 and \x60SameSite=None\x60.
+- JWT expiry and cookie lifetime are configured together through \x60JWT_EXPIRES_IN\x60.
+- Passwords are hashed with bcrypt and constrained to bcrypt's 72-byte input limit.
+- Keep JWT, OAuth, SMTP, and database secrets outside source control.
 - Do not expose password hashes, reset tokens, verification tokens, or device codes in API responses or logs.
-- Apply server-side authorization and input validation to every protected operation; frontend route guards are not security boundaries.
-- Authentication, OTP, verification, and password-reset endpoints have per-IP rate limits; OTP and email flows also enforce per-account cooldowns.
-- The default rate-limit store is in-memory and is suitable for a single application instance. Use a shared store such as Redis before running multiple API instances.
+- Authorization and input validation are enforced on the API; frontend route guards are not security boundaries.
+- Authentication, OTP, verification, and password-reset endpoints have per-IP rate limits. OTP and email-token flows also enforce per-account cooldowns.
+- The default rate-limit store is in-memory and is suitable for a single API instance. Use a shared store such as Redis before deploying multiple instances.
 - Review [SECURITY.md](SECURITY.md) for vulnerability reporting instructions.
 
-## Project status
+## Project status and limitations
 
-This is a learning and portfolio project undergoing a staged refactor. The data model, backend dependencies, authentication and token lifecycle, API contracts, authorization, email handling, and core frontend flows have been repaired in focused pull requests. Backend startup/unit checks and frontend install/test/build workflows run in GitHub Actions. Frontend Vite migration and non-breaking dependency remediation are complete, with zero reported frontend npm vulnerabilities. MongoDB-backed account/session integration tests now run in backend CI; SMTP delivery and full OAuth provider integration still require dedicated external-service tests.
+The current development branch includes the staged backend and frontend refactors, MongoDB-backed account/session tests, frontend unit tests, dependency audits, and production build checks in GitHub Actions.
 
-Do not deploy the current `main` branch as a production authentication service until the security fixes, integration tests, and deployment configuration have been completed.
+Live SMTP delivery and Google OAuth provider behavior still depend on external credentials and should be tested in a dedicated staging environment. The default in-memory rate limiter is not suitable for horizontally scaled production deployments. A production deployment also requires an explicit threat model, monitoring, secret management, HTTPS, database backups, and a review of the hosting and CORS configuration.
+
+Do not deploy this learning project as a production authentication service without those additional controls and an independent security review.
 
 ## Contributing
 
-Keep changes focused and reviewable. Prefer small branches and pull requests grouped by responsibility. Add or update tests for behavior changes, and do not include secrets or generated dependency folders in commits.
+Keep changes focused and reviewable. Prefer small branches and pull requests grouped by responsibility. Add or update tests for behavior changes, and never commit secrets, generated build output, or dependency folders.
