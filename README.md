@@ -48,7 +48,7 @@ The project implements the core authentication flows described below and is main
 └── frontend/
     ├── public/
     ├── index.html
-    ├── vite.config.js
+    ├── vite.config.mjs
     └── src/
         ├── components/
         ├── hooks/
