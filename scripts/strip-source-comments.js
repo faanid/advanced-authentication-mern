@@ -3,13 +3,7 @@ const path = require("node:path");
 const parser = require("../frontend/node_modules/@babel/parser");
 
 const root = path.resolve(__dirname, "..");
-const sourceRoots = [
-  path.join(root, "backend"),
-  path.join(root, "frontend", "src"),
-  path.join(root, "frontend", "public"),
-  path.join(root, ".github", "workflows"),
-  path.join(root, "scripts"),
-];
+const sourceRoots = [root];
 const checkOnly = process.argv.includes("--check");
 const extensions = /\.(js|jsx|mjs|cjs|css|scss|html|handlebars|svg|yml|yaml)$/i;
 const ignoredDirectories = new Set(["node_modules", "build", "dist", ".git", "coverage"]);
