@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./UserList.scss";
 import PageMenu from "../../components/pageMenu/PageMenu";
@@ -8,15 +8,11 @@ import { FaTrashAlt } from "react-icons/fa";
 import ChangeRole from "../../components/changeRole/ChangeRole";
 import { useDispatch, useSelector } from "react-redux";
 import useRedirectLoggedOutUser from "../../hooks/useRedirectLoggedOutUser";
-import { deleteUsers, getUsers } from "../../redux/features/auth/authSlice";
+import { deleteUser, getUsers, selectUsers, selectUsersLoading } from "../../redux/features/users/usersSlice";
 import { shortenText } from "../../utils/formatText";
 import { Spinner } from "../../components/loader/Loader";
 import { confirmAlert } from "react-confirm-alert";
 import "react-confirm-alert/src/react-confirm-alert.css";
-import {
-  FILTER_USERS,
-  selectUser,
-} from "../../redux/features/auth/filterSlice";
 import ReactPaginate from "react-paginate";
 
 function UserList() {
@@ -28,11 +24,21 @@ function UserList() {
   const navigate = useNavigate();
   const currentUser = useSelector((state) => state.auth.user);
 
-  const { users, isLoading } = useSelector(
-    (state) => state.auth
-  );
+  const users = useSelector(selectUsers);
+  const isLoading = useSelector(selectUsersLoading);
+  const filteredUsers = useMemo(() => {
+    const query = search.trim().toLowerCase();
 
-  const filteredUsers = useSelector(selectUser);
+    if (!query) {
+      return users;
+    }
+
+    return users.filter((user) =>
+      [user.name, user.email].some((value) =>
+        String(value || "").toLowerCase().includes(query)
+      )
+    );
+  }, [users, search]);
   useEffect(() => {
     if (currentUser && currentUser.role !== "admin") {
       navigate("/profile", { replace: true });
@@ -46,8 +52,7 @@ function UserList() {
 
   const removeUser = async (id) => {
     try {
-      await dispatch(deleteUsers(id)).unwrap();
-      await dispatch(getUsers()).unwrap();
+      await dispatch(deleteUser(id)).unwrap();
     } catch (error) {
       return;
     }
@@ -70,9 +75,8 @@ function UserList() {
   };
 
   useEffect(() => {
-    dispatch(FILTER_USERS({ users, search }));
     setItemOffset(0);
-  }, [dispatch, users, search]);
+  }, [users, search]);
 
   const itemsPerPage = 5;
   const endOffset = itemOffset + itemsPerPage;
