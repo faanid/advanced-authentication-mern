@@ -1,4 +1,5 @@
 const Token = require("../models/tokenModel");
+const { getJwtExpiresInMs } = require("../utils");
 
 const isValidPassword = (password) =>
   typeof password === "string" &&
@@ -16,7 +17,7 @@ const setAuthCookie = (res, token) => {
   res.cookie("token", token, {
     path: "/",
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
+    maxAge: getJwtExpiresInMs(),
     sameSite: isProduction ? "none" : "lax",
     secure: isProduction,
   });
@@ -74,6 +75,20 @@ const issueOneTimeToken = async ({
   }
 };
 
+const rememberUserAgent = (user, userAgent) => {
+  const currentAgents = Array.isArray(user.userAgent) ? user.userAgent : [];
+  const nextAgents = [...new Set([...currentAgents, userAgent].filter(Boolean))].slice(-10);
+  const changed =
+    nextAgents.length !== currentAgents.length ||
+    nextAgents.some((agent, index) => agent !== currentAgents[index]);
+
+  if (changed) {
+    user.userAgent = nextAgents;
+  }
+
+  return changed;
+};
+
 const clearAuthCookie = (res) => {
   const isProduction = process.env.NODE_ENV === "production";
 
@@ -91,5 +106,6 @@ module.exports = {
   setAuthCookie,
   buildFrontendUrl,
   issueOneTimeToken,
+  rememberUserAgent,
   clearAuthCookie,
 };
