@@ -2,7 +2,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const crypto = require("node:crypto");
 const jwt = require("jsonwebtoken");
-const { generateToken, hashToken } = require("../utils");
+const { generateToken, hashToken, getJwtExpiresInMs } = require("../utils");
 
 test("generateToken signs the user ID and token version", () => {
   const previousSecret = process.env.JWT_SECRET;
@@ -74,4 +74,20 @@ test("hashToken returns a deterministic SHA-256 digest", () => {
   assert.equal(hashToken(value), hashToken(value));
   assert.notEqual(hashToken(value), value);
   assert.match(hashToken(value), /^[a-f0-9]{64}$/);
+});
+
+test("getJwtExpiresInMs supports the same common durations as JWT expiry", () => {
+  assert.equal(getJwtExpiresInMs("1h"), 60 * 60 * 1000);
+  assert.equal(getJwtExpiresInMs("2 days"), 2 * 24 * 60 * 60 * 1000);
+  assert.equal(getJwtExpiresInMs("500"), 500);
+  assert.equal(getJwtExpiresInMs(60), 60 * 1000);
+});
+
+test("getJwtExpiresInMs rejects invalid or non-positive durations", () => {
+  assert.throws(() => getJwtExpiresInMs("invalid"), {
+    message: "JWT_EXPIRES_IN must be a valid duration",
+  });
+  assert.throws(() => getJwtExpiresInMs("0s"), {
+    message: "JWT_EXPIRES_IN must be a positive duration",
+  });
 });
