@@ -66,7 +66,7 @@ jobs:
         run: node scripts/strip-source-comments.js --check
 
       - name: Check backend and utility JavaScript syntax
-        run: find backend scripts -type f \( -name "*.js" -o -name "*.mjs" -o -name "*.cjs" \) -print0 | xargs -0 -n 1 node --check
+        run: find backend scripts -type d -name node_modules -prune -o -type f \( -name "*.js" -o -name "*.mjs" -o -name "*.cjs" \) -print0 | xargs -0 -n 1 node --check
 
       - name: Run backend tests
         working-directory: backend
