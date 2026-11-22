@@ -4,6 +4,7 @@ import authService from "./authService";
 
 const initialState = {
   isLoggedIn: false,
+  authChecked: false,
   user: null,
   users: [],
   twoFactor: false,
@@ -322,6 +323,7 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isLoggedIn = true;
+        state.authChecked = true;
         state.isSuccess = true;
         state.user = action.payload;
         toast.success("Registration successful");
@@ -339,6 +341,7 @@ const authSlice = createSlice({
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isLoggedIn = true;
+        state.authChecked = true;
         state.isSuccess = true;
         state.user = action.payload;
         toast.success("Login successful");
@@ -359,6 +362,7 @@ const authSlice = createSlice({
       .addCase(logout.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isLoggedIn = false;
+        state.authChecked = true;
         state.isSuccess = true;
         state.user = null;
         toast.success(action.payload);
@@ -369,16 +373,26 @@ const authSlice = createSlice({
         state.isError = true;
         toast.error(action.payload);
       })
-      .addCase(getLoginStatus.pending, (state, action) => {
+      .addCase(getLoginStatus.pending, (state) => {
         state.isLoading = true;
+        state.authChecked = false;
       })
       .addCase(getLoginStatus.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.isLoggedIn = action.payload;
+        state.authChecked = true;
+        state.isLoggedIn = Boolean(action.payload);
+
+        if (!state.isLoggedIn) {
+          state.user = null;
+        }
+
         state.isSuccess = true;
       })
       .addCase(getLoginStatus.rejected, (state, action) => {
         state.isLoading = false;
+        state.authChecked = true;
+        state.isLoggedIn = false;
+        state.user = null;
         state.message = action.payload;
         state.isError = true;
       })
@@ -387,12 +401,16 @@ const authSlice = createSlice({
       })
       .addCase(getUser.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.authChecked = true;
         state.user = action.payload;
         state.isSuccess = true;
         state.isLoggedIn = true;
       })
       .addCase(getUser.rejected, (state, action) => {
         state.isLoading = false;
+        state.isLoggedIn = false;
+        state.user = null;
+        state.authChecked = true;
         state.message = action.payload;
         state.isError = true;
         toast.error(action.payload);
@@ -554,6 +572,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isLoggedIn = true;
+        state.authChecked = true;
         state.twoFactor = false;
         state.user = action.payload;
         toast.success("Login successful");
@@ -572,6 +591,7 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.isSuccess = true;
         state.isLoggedIn = true;
+        state.authChecked = true;
         state.user = action.payload;
         toast.success("Login Successful");
       })
@@ -589,6 +609,7 @@ export const { RESET, CALC_SUSPENDED_USER, CALC_VERIFIED_USER } =
   authSlice.actions;
 
 export const selectIsLoggedIn = (state) => state.auth.isLoggedIn;
+export const selectAuthChecked = (state) => state.auth.authChecked;
 export const selectUser = (state) => state.auth.user;
 
 export default authSlice.reducer;
