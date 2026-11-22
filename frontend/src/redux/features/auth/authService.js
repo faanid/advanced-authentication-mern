@@ -1,15 +1,8 @@
 import axios from "axios";
+import { API_URL } from "../../api/apiConfig";
 import { validateEmail } from "../../../utils/authValidation";
 
 export { validateEmail };
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL?.replace(/\/+$/, "");
-
-if (!BACKEND_URL) {
-  throw new Error("VITE_BACKEND_URL must be configured");
-}
-
-export const API_URL = `${BACKEND_URL}/api/users/`;
 
 const register = async (userData) => {
   const response = await axios.post(API_URL + "register", userData);
@@ -60,24 +53,11 @@ const forgotPassword = async (userData) => {
   const response = await axios.post(API_URL + "forgotPassword", userData);
   return response.data.message;
 };
-const getUsers = async () => {
-  const response = await axios.get(API_URL + "getUsers");
-  return response.data;
-};
-const deleteUsers = async (id) => {
-  const response = await axios.delete(API_URL + id);
-  return response.data.message;
-};
 const resetPassword = async (userData, resetToken) => {
   const response = await axios.patch(
     `${API_URL}resetPassword/${encodeURIComponent(resetToken)}`,
     userData
   );
-  return response.data.message;
-};
-
-const upgradeUser = async (userData) => {
-  const response = await axios.post(API_URL + "upgradeUser", userData);
   return response.data.message;
 };
 
@@ -111,9 +91,6 @@ const authService = {
   changePassword,
   forgotPassword,
   resetPassword,
-  getUsers,
-  deleteUsers,
-  upgradeUser,
   sendLoginCode,
   loginWithCode,
   loginWithGoogle,
